@@ -227,8 +227,10 @@
 #endif  // __GNUC__
 
 // Visual Studio:
-#if defined _MSC_VER && !defined _USING_V110_SDK71_
-# include <winapifamily.h>
+#ifdef _MSC_VER
+# ifndef _USING_V110_SDK71_
+#  include <winapifamily.h>
+# endif
 #endif
 
 // Determines the platform on which Google Test is compiled.
