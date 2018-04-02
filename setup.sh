@@ -42,8 +42,8 @@ fi
 # # #
 # INSTALL BOOST
 #
-boostVersion='1.65.1'
-boostLabel="boost_1_65_1"
+boostVersion='1.66.0'
+boostLabel="boost_1_66_0"
 wget "https://dl.bintray.com/boostorg/release/$boostVersion/source/$boostLabel.tar.bz2"
 tar -xf "$boostLabel.tar.bz2"
 cd "$boostLabel/tools/build/"
@@ -64,10 +64,10 @@ rm "$boostLabel.tar.bz2"
 # # #
 # INSTALL POCO
 #
-pocoLabel='poco-1.7.8p3'
+pocoLabel='poco-1.9.0'
 pocoTarFile=$pocoLabel"-all.tar.gz"
 pocoXDir=$pocoLabel"-all"
-wget "https://pocoproject.org/releases/poco-1.7.8/$pocoTarFile"
+wget "https://pocoproject.org/releases/poco-1.9.0/$pocoTarFile"
 tar -xf $pocoTarFile
 cd $pocoXDir
 ./configure --omit=Data/MySQL,MongoDB,PageCompiler --config=Linux-clang --static --no-tests --no-samples --prefix="/opt/$pocoLabel"
