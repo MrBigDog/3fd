@@ -353,7 +353,6 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="..\Acknowledgements.txt" />
     <Text Include="CMakeLists.txt" />
     <Text Include="ReadMe.txt" />
   </ItemGroup>
@@ -365,9 +364,6 @@
     <ClInclude Include="gc_vertexstore.h" />
     <ClInclude Include="base.h" />
     <ClInclude Include="callstacktracer.h" />
-    <ClInclude Include="CL\cl.h" />
-    <ClInclude Include="CL\cl_platform.h" />
-    <ClInclude Include="CL\opencl.h" />
     <ClInclude Include="configuration.h" />
     <ClInclude Include="dependencies.h" />
     <ClInclude Include="exceptions.h" />

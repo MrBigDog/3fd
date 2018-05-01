@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2011
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3FD", "3FD\3FD.vcxproj", "{CCC4A0A2-15FD-4A6E-AC6C-094AAAAEC80B}"
 EndProject
@@ -33,6 +33,16 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTestsApp.WinRT.UWP", "UnitTests\WinRT.UWP\UnitTestsApp.WinRT.UWP.vcxproj", "{AD508BAA-0192-4EDB-B1F5-23DC9CC2EC0C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IntegrationTestsApp.WinRT.UWP", "IntegrationTests\WinRT.UWP\IntegrationTestsApp.WinRT.UWP.vcxproj", "{C427C362-4B09-4C3F-8578-F58521328DF0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution", "Solution", "{60F3AE6C-C6A3-4C8B-A98A-9044DE809838}"
+	ProjectSection(SolutionItems) = preProject
+		Acknowledgements.txt = Acknowledgements.txt
+		build.ps1 = build.ps1
+		CONTROL = CONTROL
+		LICENSE = LICENSE
+		portfile.cmake = portfile.cmake
+		README = README
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -265,5 +275,6 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		VisualSVNWorkingCopyRoot = .
+		SolutionGuid = {3FB930DD-93C4-4123-8373-DCB40B20A7CA}
 	EndGlobalSection
 EndGlobal

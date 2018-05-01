@@ -1,0 +1,4 @@
+Source: 3fd
+Version: 2.5.4
+Description: C++ Framework For Fast Development
+Build-Depends: boost-lockfree, boost-regex, poco, sqlite3, rapidxml
