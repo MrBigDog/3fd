@@ -31,9 +31,6 @@
     <Filter Include="MORE\OpenCL">
       <UniqueIdentifier>{8d8dc2c4-8a72-4150-8c2d-28696b3e904a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="MORE\SQLite3">
-      <UniqueIdentifier>{395999a4-24a7-4dfe-9a52-6bf9eb87e510}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\OpenCL">
       <UniqueIdentifier>{ccc3c52c-aff6-436c-8adf-78d07d1a852a}</UniqueIdentifier>
     </Filter>
@@ -89,9 +86,6 @@
   <ItemGroup>
     <ClInclude Include="sqlite.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sqlite3.h">
-      <Filter>MORE\SQLite3</Filter>
     </ClInclude>
     <ClInclude Include="CL\cl.h">
       <Filter>MORE\OpenCL</Filter>
@@ -224,9 +218,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="sqlite3.c">
-      <Filter>MORE\SQLite3</Filter>
-    </ClCompile>
     <ClCompile Include="dependencies.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
