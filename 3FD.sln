@@ -37,10 +37,13 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution", "Solution", "{60F3AE6C-C6A3-4C8B-A98A-9044DE809838}"
 	ProjectSection(SolutionItems) = preProject
 		Acknowledgements.txt = Acknowledgements.txt
+		bootstrap.sh = bootstrap.sh
 		build.ps1 = build.ps1
-		CONTROL = CONTROL
+		build.sh = build.sh
+		configure.sh = configure.sh
+		vcpkg_port\CONTROL = vcpkg_port\CONTROL
 		LICENSE = LICENSE
-		portfile.cmake = portfile.cmake
+		vcpkg_port\portfile.cmake = vcpkg_port\portfile.cmake
 		README = README
 	EndProjectSection
 EndProject
@@ -274,7 +277,7 @@ Global
 		{C427C362-4B09-4C3F-8578-F58521328DF0} = {EE86AB66-09DF-45EB-A42A-ED426AF3266E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		VisualSVNWorkingCopyRoot = .
 		SolutionGuid = {3FB930DD-93C4-4123-8373-DCB40B20A7CA}
+		VisualSVNWorkingCopyRoot = .
 	EndGlobalSection
 EndGlobal
