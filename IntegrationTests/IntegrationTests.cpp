@@ -3,6 +3,7 @@
 #include "logger.h"
 #include <exception>
 #include <iostream>
+#include <vld.h>
 
 #ifndef _3FD_PLATFORM_WINRT
 #    ifdef _MSC_VER

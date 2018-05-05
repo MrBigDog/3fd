@@ -70,26 +70,17 @@
 
 // These instructions have they definition depending on whether this is a release compilation:
 #ifdef NDEBUG
-#   if defined _MSC_VER && _MSC_VER < 1900
-#       define NOEXCEPT throw()
-#   else
-#       define NOEXCEPT noexcept
-#   endif
-
 #   define RELEASE_DEBUG_SWITCH(STATEMENT1, STATEMENT2) STATEMENT1
-#    define ONDEBUG(CODE_LINE)    ;
+#   define ONDEBUG(CODE_LINE) ;
 #else
-#   ifdef _3FD_PLATFORM_WIN32API
-#       include <vld.h> // Visual Leak Detector
-
-#   elif defined _3FD_PLATFORM_WINRT
+#   ifdef _3FD_PLATFORM_WINRT
 #       define _CRTDBG_MAP_ALLOC
 #       include <stdlib.h>
 #       include <crtdbg.h>
 #   endif
 
 #   define RELEASE_DEBUG_SWITCH(STATEMENT1, STATEMENT2) STATEMENT2
-#    define ONDEBUG(CODE_LINE) CODE_LINE
+#   define ONDEBUG(CODE_LINE) CODE_LINE
 #endif
 
 // Some few useful "keywords":

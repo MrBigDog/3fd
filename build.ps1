@@ -1,4 +1,4 @@
-﻿# Script written by Felipe Vieira Aburaya (last update: October 12th 2017)
+﻿# Script written by Felipe Vieira Aburaya (last update: April 2nd 2018)
 #
 # Usage:
 #

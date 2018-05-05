@@ -39,10 +39,10 @@ namespace memory
     {
     private:
 
-        std::thread                        m_thread;
-        std::exception_ptr                m_error;
-        MemoryDigraph                    m_memoryDigraph;
-        utils::LockFreeQueue<IMessage>    m_messagesQueue;
+        std::thread                     m_thread;
+        std::exception_ptr              m_error;
+        MemoryDigraph                   m_memoryDigraph;
+        utils::LockFreeQueue<IMessage>  m_messagesQueue;
         utils::Event                    m_terminationEvent;
 
         GarbageCollector();
@@ -52,7 +52,7 @@ namespace memory
         // Singleton needs:
 
         static std::mutex        singleInstanceCreationMutex;
-        static GarbageCollector    *uniqueObjectPtr;
+        static GarbageCollector *uniqueObjectPtr;
         static GarbageCollector *CreateInstance();
 
     public:
