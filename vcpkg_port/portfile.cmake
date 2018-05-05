@@ -31,32 +31,35 @@ vcpkg_from_github(
 	SHA512 1
 )
 
-# vcpkg_configure_cmake(
-#     SOURCE_PATH ${SOURCE_PATH}
-#     PREFER_NINJA # Disable this option if project cannot be built with Ninja
-#     OPTIONS -DUSE_THIS_IN_ALL_BUILDS=1 -DUSE_THIS_TOO=2
-#     OPTIONS_RELEASE -DOPTIMIZE=1
-#     OPTIONS_DEBUG -DDEBUGGABLE=1
-# )
-
-# vcpkg_install_cmake()
-
 # Build:
 message(STATUS "Building...")
-if (VCPKG_CMAKE_SYSTEM_NAME MATCHES "WindowsStore")
-	vcpkg_build_msbuild(
-		USE_VCPKG_INTEGRATION
-		PROJECT_PATH ${SOURCE_PATH}/3FD/3FD.WinRT.UWP.vcxproj
-		PLATFORM ${BUILD_ARCH}
+if (MSVC) # Microsoft Visual C++:
+	if (VCPKG_CMAKE_SYSTEM_NAME MATCHES "WindowsStore")
+		vcpkg_build_msbuild(
+			USE_VCPKG_INTEGRATION
+			PROJECT_PATH ${SOURCE_PATH}/3FD/3FD.WinRT.UWP.vcxproj
+			PLATFORM ${BUILD_ARCH}
+		)
+	else()
+		vcpkg_build_msbuild(
+			USE_VCPKG_INTEGRATION
+			PROJECT_PATH ${SOURCE_PATH}/3FD/3FD.vcxproj
+			PLATFORM ${BUILD_ARCH}
+			TARGET Build
+		)
+	endif()
+else() # POSIX:
+	vcpkg_configure_cmake(
+		SOURCE_PATH ${SOURCE_PATH}/3FD
+		PREFER_NINJA
+		OPTIONS -DCMAKE_DEBUG_POSTFIX=d
+				-DCMAKE_C_COMPILER=clang
+				-DCMAKE_CXX_COMPILER=clang++
+				-DCMAKE_CXX_FLAGS="-std=c++11"
 	)
-else()
-	vcpkg_build_msbuild(
-		USE_VCPKG_INTEGRATION
-		PROJECT_PATH ${SOURCE_PATH}/3FD/3FD.vcxproj
-		PLATFORM ${BUILD_ARCH}
-		TARGET Build
-	)
-endif()
+
+	vcpkg_install_cmake()
+endif (MSVC)
 
 # Install:
 message(STATUS "Installing...")
@@ -77,29 +80,40 @@ file(INSTALL
 	DESTINATION ${CURRENT_PACKAGES_DIR}/share/3FD
 )
 
-if (VCPKG_CMAKE_SYSTEM_NAME MATCHES "WindowsStore")
+if (VCPKG_CMAKE_SYSTEM_NAME MATCHES "WindowsStore") # Visual C++, UWP app:
     file(INSTALL
 		${SOURCE_PATH}/3FD/${BUILD_ARCH}/Debug/3FD.WinRT.UWP.lib
+		${SOURCE_PATH}/3FD/${BUILD_ARCH}/Debug/3FD.WinRT.UWP.pdb
 		${SOURCE_PATH}/3FD/${BUILD_ARCH}/Debug/_3FD_WinRT_UWP.pri
 		DESTINATION ${CURRENT_PACKAGES_DIR}/debug/lib
 	)
     file(INSTALL
 		${SOURCE_PATH}/3FD/${BUILD_ARCH}/Release/3FD.WinRT.UWP.lib
+		${SOURCE_PATH}/3FD/${BUILD_ARCH}/Release/3FD.WinRT.UWP.pdb
 		${SOURCE_PATH}/3FD/${BUILD_ARCH}/Release/_3FD_WinRT_UWP.pri
 		DESTINATION ${CURRENT_PACKAGES_DIR}/lib
 	)
-else()
+elseif (MSVC) # Visual C++, Win32 app:
     file(INSTALL
 		${SOURCE_PATH}/3FD/${BUILD_ARCH}/Debug/3FD.lib
+		${SOURCE_PATH}/3FD/${BUILD_ARCH}/Debug/3FD.pdb
 		DESTINATION ${CURRENT_PACKAGES_DIR}/debug/lib
 	)
     file(INSTALL
 		${SOURCE_PATH}/3FD/${BUILD_ARCH}/Release/3FD.lib
+		${SOURCE_PATH}/3FD/${BUILD_ARCH}/Release/3FD.pdb
+		DESTINATION ${CURRENT_PACKAGES_DIR}/lib
+	)
+else() # POSIX:
+    file(INSTALL
+		${SOURCE_PATH}/build/lib/lib3FDd.a
+		DESTINATION ${CURRENT_PACKAGES_DIR}/debug/lib
+	)
+    file(INSTALL
+		${SOURCE_PATH}/build/lib/lib3FD.a
 		DESTINATION ${CURRENT_PACKAGES_DIR}/lib
 	)
 endif()
-
-vcpkg_copy_pdbs()
 
 # Handle copyright
 file(INSTALL ${SOURCE_PATH}/LICENSE DESTINATION ${CURRENT_PACKAGES_DIR}/share/3fd RENAME copyright)

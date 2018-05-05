@@ -11,7 +11,7 @@ make install
 cd ../IntegrationTests
 make install
 cd ../
-cp 3FD/*.h build/include/3FD
+find 3FD/* | grep -v '_impl' | grep '\.h$' | xargs -I{} cp {} build/include/3FD/
 cp -rf btree  build/include/
 cp -rf OpenCL build/include/
 cp CreateMsSqlSvcBrokerDB.sql build/
