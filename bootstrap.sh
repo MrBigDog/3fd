@@ -20,7 +20,7 @@ export SetNoColor='\033[0m';
 
 if [ -n "$UBUNTU" ] && [ $UBUNTU -gt 14 ]; then
     printf "${SetColorToYELLOW}Checking dependencies...${SetNoColor}\n"
-    apt install --assume-yes cmake unixodbc unixodbc-dev openssl libssl-dev
+    sudo apt install --assume-yes cmake unixodbc unixodbc-dev openssl libssl-dev
 
     HAS_MSSQL_TOOLS=$(dpkg -l | grep "mssql-tools")
 
@@ -58,17 +58,17 @@ fi
 # # #
 # INSTALL VCPKG
 #
-#cd /opt
-#{ ls vcpkg || git clone https://github.com/Microsoft/vcpkg; } &> /dev/null
-#cd vcpkg 
-#if [ ! -f ./vcpkg ]; then
-#    printf "${SetColorToYELLOW}Installing vcpkg...${SetNoColor}\n"
-#    ./bootstrap-vcpkg.sh
-#fi
-
-#printf "${SetColorToYELLOW}Checking dependencies packages...${SetNoColor}\n"
-#./vcpkg install boost-lockfree boost-regex poco rapidxml sqlite3
-#cd ..
+# cd /opt
+# { ls vcpkg || git clone https://github.com/Microsoft/vcpkg; } &> /dev/null
+# cd vcpkg 
+# if [ ! -f ./vcpkg ]; then
+#     printf "${SetColorToYELLOW}Installing vcpkg...${SetNoColor}\n"
+#     ./bootstrap-vcpkg.sh
+# fi
+#
+# printf "${SetColorToYELLOW}Checking dependencies packages...${SetNoColor}\n"
+# ./vcpkg install boost-lockfree boost-regex poco rapidxml sqlite3
+# cd ..
 
 numCpuCores=$(grep -c ^processor /proc/cpuinfo)
 
@@ -86,9 +86,10 @@ printf "${SetColorToYELLOW}Unpacking Boost source...${SetNoColor}\n"
 tar -xf "$boostLabel.tar.gz"
 printf "${SetColorToYELLOW}Building Boost...${SetNoColor}\n"
 cd $boostLabel
-./bootstrap.sh --prefix=$(pwd)/build --with-libraries=system,regex
+./bootstrap.sh --prefix=../ --with-libraries=system,thread,regex
 ./b2 -j $numCpuCores variant=debug link=static threading=multi runtime-link=shared --layout=tagged
 ./b2 -j $numCpuCores variant=release link=static threading=multi runtime-link=shared --layout=tagged
+./b2 install
 cd ..
 rm -rf $boostLabel
 rm "$boostLabel.tar.gz"
@@ -105,7 +106,7 @@ printf "${SetColorToYELLOW}Unpacking POCO C++ libs source...${SetNoColor}\n"
 tar -xf $pocoTarFile
 cd $pocoXDir
 printf "${SetColorToYELLOW}Building POCO C++ libs...${SetNoColor}\n"
-./configure --omit=Data/MySQL,Dynamic,JSON,MongoDB,PageCompiler,Redis --static --no-tests --no-samples --prefix="$(pwd)/build"
+./configure --omit=Data/MySQL,Data/SQLite,Dynamic,JSON,MongoDB,PageCompiler,Redis --static --no-tests --no-samples --prefix=../
 make -s -j $numCpuCores || return
 make install
 cd ..
