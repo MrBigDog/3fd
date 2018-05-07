@@ -2,14 +2,9 @@
 # CMake build script for 3FD
 #
 
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 2.6)
 
 project(3FD)
-
-find_package(boost    REQUIRED)
-find_package(poco     REQUIRED)
-find_package(rapidxml REQUIRED)
-find_package(sqlite3  REQUIRED)
 
 #####################
 # Macro definitions:
@@ -32,6 +27,8 @@ include_directories(
     "${PROJECT_SOURCE_DIR}"
     "${PROJECT_SOURCE_DIR}/../btree"
     "${PROJECT_SOURCE_DIR}/../OpenCL"
+    "$ENV{POCO_ROOT}/include"
+    "$ENV{BOOST_HOME}/include"
 )
 
 ########################

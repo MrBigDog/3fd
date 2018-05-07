@@ -20,23 +20,7 @@ export SetNoColor='\033[0m';
 
 if [ -n "$UBUNTU" ] && [ $UBUNTU -gt 14 ]; then
     printf "${SetColorToYELLOW}Checking dependencies...${SetNoColor}\n"
-    apt install --assume-yes cmake curl git libc++1 unzip tar
-
-    HAS_GXX7=$(dpkg -l | grep 'g++-[7-9]')
-
-    if [ -z "$HAS_GXX7" ]; then
-        while true; do
-            read -p "VCPKG requires GNU C++ Compiler v7+. Do you wish to upgrade?" yn
-            case $yn in
-                [Nn]* ) return;;
-                * ) echo "Please answer yes or no.";;
-            esac
-        done
-        printf "${SetColorToYELLOW}Upgrading g++..${SetNoColor}\n"
-        add-apt-repository ppa:ubuntu-toolchain-r/test -y
-        apt update -y
-        apt install g++-7 -y
-    fi
+    apt install --assume-yes cmake unixodbc unixodbc-dev openssl libssl-dev
 
     HAS_MSSQL_TOOLS=$(dpkg -l | grep "mssql-tools")
 
@@ -57,11 +41,10 @@ elif [ -n "$AMAZON" ] && [ $AMAZON -gt 2017 ]; then
     printf "${SetColorToYELLOW}Checking dependencies...${SetNoColor}\n"
     yum groups install -y development
     yum groups install -y development-libs
-    yum install -y clang
-    wget https://cmake.org/files/v3.8/cmake-3.8.2.tar.gz
-    tar -xf cmake-3.8.2.tar.gz
-    cd cmake-3.8.2
-    env CC=clang CXX=clang++ ./bootstrap
+    wget https://cmake.org/files/v3.10/cmake-3.10.3.tar.gz
+    tar -xf cmake-3.10.3.tar.gz
+    cd cmake-3.10.3
+    ./bootstrap
     make && make install
     export PATH=$PATH:/usr/local/bin
     cd ..
@@ -75,52 +58,57 @@ fi
 # # #
 # INSTALL VCPKG
 #
-cd /opt
-{ ls vcpkg || git clone https://github.com/Microsoft/vcpkg; } &> /dev/null
-cd vcpkg 
-if [ ! -f ./vcpkg ]; then
-    printf "${SetColorToYELLOW}Installing vcpkg...${SetNoColor}\n"
-    ./bootstrap-vcpkg.sh
-fi
+#cd /opt
+#{ ls vcpkg || git clone https://github.com/Microsoft/vcpkg; } &> /dev/null
+#cd vcpkg 
+#if [ ! -f ./vcpkg ]; then
+#    printf "${SetColorToYELLOW}Installing vcpkg...${SetNoColor}\n"
+#    ./bootstrap-vcpkg.sh
+#fi
 
-printf "${SetColorToYELLOW}Checking dependencies packages...${SetNoColor}\n"
-./vcpkg install boost-lockfree boost-regex poco rapidxml sqlite3
-cd ..
+#printf "${SetColorToYELLOW}Checking dependencies packages...${SetNoColor}\n"
+#./vcpkg install boost-lockfree boost-regex poco rapidxml sqlite3
+#cd ..
+
+numCpuCores=$(grep -c ^processor /proc/cpuinfo)
+
+{ ls build || mkdir -p build; } &> /dev/null
+cd build
 
 # # #
 # INSTALL BOOST
 #
-# boostVersion='1.66.0'
-# boostLabel="boost_1_66_0"
-# wget "https://dl.bintray.com/boostorg/release/$boostVersion/source/$boostLabel.tar.bz2"
-# tar -xf "$boostLabel.tar.bz2"
-# cd "$boostLabel/tools/build/"
-# ./bootstrap.sh
-# cd ../../
-# ./tools/build/b2 -j 3 variant=debug link=static threading=multi toolset=clang runtime-link=shared --layout=tagged
-# ./tools/build/b2 -j 3 variant=release link=static threading=multi toolset=clang runtime-link=shared --layout=tagged
-# BOOST_HOME="/opt/boost-$boostVersion"
-# mkdir $BOOST_HOME
-# mkdir $BOOST_HOME/include
-# mkdir $BOOST_HOME/lib
-# mv stage/lib/* $BOOST_HOME/lib/
-# mv boost $BOOST_HOME/include/
-# cd ..
-# rm -rf $boostLabel
-# rm "$boostLabel.tar.bz2"
+printf "${SetColorToYELLOW}Downloading Boost source...${SetNoColor}\n"
+boostVersion='1.67.0'
+boostLabel="boost_1_67_0"
+wget "https://dl.bintray.com/boostorg/release/$boostVersion/source/$boostLabel.tar.gz"
+printf "${SetColorToYELLOW}Unpacking Boost source...${SetNoColor}\n"
+tar -xf "$boostLabel.tar.gz"
+printf "${SetColorToYELLOW}Building Boost...${SetNoColor}\n"
+cd $boostLabel
+./bootstrap.sh --prefix=$(pwd)/build --with-libraries=system,regex
+./b2 -j $numCpuCores variant=debug link=static threading=multi runtime-link=shared --layout=tagged
+./b2 -j $numCpuCores variant=release link=static threading=multi runtime-link=shared --layout=tagged
+cd ..
+rm -rf $boostLabel
+rm "$boostLabel.tar.gz"
 
 # # #
 # INSTALL POCO
 #
-# pocoLabel='poco-1.9.0'
-# pocoTarFile=$pocoLabel"-all.tar.gz"
-# pocoXDir=$pocoLabel"-all"
-# wget "https://pocoproject.org/releases/poco-1.9.0/$pocoTarFile"
-# tar -xf $pocoTarFile
-# cd $pocoXDir
-# ./configure --omit=Data/MySQL,MongoDB,PageCompiler --config=Linux-clang --static --no-tests --no-samples --prefix="/opt/$pocoLabel"
-# make -s -j3 || exit
-# make install
-# cd ..
-# rm -rf $pocoXDir
-# rm $pocoTarFile
+printf "${SetColorToYELLOW}Downloading POCO C++ libs source...${SetNoColor}\n"
+pocoLabel='poco-1.9.0'
+pocoTarFile=$pocoLabel"-all.tar.gz"
+pocoXDir=$pocoLabel"-all"
+wget "https://pocoproject.org/releases/poco-1.9.0/$pocoTarFile"
+printf "${SetColorToYELLOW}Unpacking POCO C++ libs source...${SetNoColor}\n"
+tar -xf $pocoTarFile
+cd $pocoXDir
+printf "${SetColorToYELLOW}Building POCO C++ libs...${SetNoColor}\n"
+./configure --omit=Data/MySQL,Dynamic,JSON,MongoDB,PageCompiler,Redis --static --no-tests --no-samples --prefix="$(pwd)/build"
+make -s -j $numCpuCores || return
+make install
+cd ..
+rm -rf $pocoXDir
+rm $pocoTarFile
+

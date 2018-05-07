@@ -4,11 +4,14 @@ MODE=$1
 
 if [[ -n $MODE ]] && [[ $MODE == $(echo $MODE | grep -i 'debug\|release') ]];
 then
-    CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=$MODE -DCMAKE_DEBUG_POSTFIX=d -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS=\"-std=c++11\" -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake"
+    CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=$MODE -DCMAKE_DEBUG_POSTFIX=d"
 else
     printf 'ERROR! Usage: ./configure.sh [debug|release]\n\n'
     exit
 fi
+
+export POCO_ROOT=$(pwd)/build
+export BOOST_HOME=$(pwd)/build
 
 { ls build/include/3FD || mkdir -p build/include/3FD; } &> /dev/null
 { ls build/lib || mkdir -p build/lib; } &> /dev/null

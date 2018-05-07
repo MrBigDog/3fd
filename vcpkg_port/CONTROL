@@ -1,4 +1,4 @@
 Source: 3fd
 Version: 2.5.4
 Description: C++ Framework For Fast Development
-Build-Depends: boost-lockfree (windows linux osx), boost-regex (windows linux osx), poco (windows linux osx), sqlite3, rapidxml
+Build-Depends: boost-lockfree (windows), boost-regex (windows), poco (windows), sqlite3, rapidxml
