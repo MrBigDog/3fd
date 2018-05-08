@@ -7,7 +7,7 @@ export SetColorToYELLOW='\033[0;33m';
 export SetNoColor='\033[0m';
 
 # # #
-# SETUP DEV ENV
+# INSTALL PACKAGES & TOOLCHAIN
 #
 
 if [ -n "$UBUNTU" ] && [ $UBUNTU -gt 14 ]; then
@@ -18,7 +18,7 @@ if [ -n "$UBUNTU" ] && [ $UBUNTU -gt 14 ]; then
     fi
 
     printf "${SetColorToYELLOW}Checking dependencies...${SetNoColor}\n"
-    sudo apt install --assume-yes cmake unixodbc unixodbc-dev openssl libssl-dev
+    sudo apt install --assume-yes unzip cmake unixodbc unixodbc-dev openssl libssl-dev
 
     HAS_MSSQL_TOOLS=$(dpkg -l | grep "mssql-tools")
 
@@ -68,56 +68,118 @@ fi
 # ./vcpkg install boost-lockfree boost-regex poco rapidxml sqlite3
 # cd ..
 
-if [ -d build ]; then
-    printf "${SetColorToYELLOW}Do you wish to download and rebuild Boost and POCO C++ frou source?${SetNoColor}"
+{ ls build || mkdir build } &> /dev/null
+cd build
+
+# # #
+# BUILD RAPIDXML
+#
+function buildRapidxml()
+{
+    find . | grep 'rapidxml' | xargs rm -rf
+    RAPIDXML='rapidxml-1.13'
+    wget "https://netcologne.dl.sourceforge.net/project/rapidxml/rapidxml/rapidxml%201.13/${RAPIDXML}.zip"
+    unzip "${RAPIDXML}.zip"
+    mkdir -p include/rapidxml
+    mv $RAPIDXML/*.hpp include/rapidxml/
+    rm -rf $RAPIDXML*
+}
+
+# # #
+# BUILD SQLITE3
+#
+function buildSqlite3()
+{
+    find . | grep 'sqlite' | xargs rm -rf
+    SQLITE='sqlite-autoconf-3230100'
+    wget "http://sqlite.org/2018/${SQLITE}.tar.gz"
+    tar -xf "${SQLITE}.tar.gz"
+    cd $SQLITE
+    ./configure
+    make
+}
+
+if [ -d include ]; then
+    printf "${SetColorToYELLOW}Do you wish to download and (re)build RAPIDXML and SQLITE3 from source?${SetNoColor}"
     while true; do
         read -p " [yes/no] " yn
         case $yn in
-            [Yy]* ) rm -rf build;;
-            [Nn]* ) exit;;
+            [Yy]* ) buildRapidxml; buildSqlite3;;
+            [Nn]* ) ;;
             * ) echo "Please answer yes or no.";;
         esac
     done
 fi
 
-mkdir build && cd build
-
 numCpuCores=$(grep -c ^processor /proc/cpuinfo)
 
 # # #
-# INSTALL BOOST
+# BUILD BOOST
 #
-printf "${SetColorToYELLOW}Downloading Boost source...${SetNoColor}\n"
-boostVersion='1.67.0'
-boostLabel="boost_1_67_0"
-wget "https://dl.bintray.com/boostorg/release/$boostVersion/source/$boostLabel.tar.gz"
-printf "${SetColorToYELLOW}Unpacking Boost source...${SetNoColor}\n"
-tar -xf "$boostLabel.tar.gz"
-printf "${SetColorToYELLOW}Building Boost...${SetNoColor}\n"
-cd $boostLabel
-./bootstrap.sh --prefix=../ --with-libraries=system,thread,regex
-./b2 -j $numCpuCores variant=debug link=static threading=multi runtime-link=shared --layout=tagged install
-./b2 -j $numCpuCores variant=release link=static threading=multi runtime-link=shared --layout=tagged install
-cd ..
-rm -rf $boostLabel
-rm "$boostLabel.tar.gz"
+function buildBoost()
+{
+    find ./lib | grep boost | xargs rm
+    { ls include/boost && rm -rf include/boost } &> /dev/null
+    printf "${SetColorToYELLOW}Downloading Boost source...${SetNoColor}\n"
+    boostVersion='1.67.0'
+    boostLabel="boost_1_67_0"
+    wget "https://dl.bintray.com/boostorg/release/$boostVersion/source/$boostLabel.tar.gz"
+    printf "${SetColorToYELLOW}Unpacking Boost source...${SetNoColor}\n"
+    tar -xf "$boostLabel.tar.gz"
+    printf "${SetColorToYELLOW}Building Boost...${SetNoColor}\n"
+    cd $boostLabel
+    ./bootstrap.sh --prefix=../ --with-libraries=system,thread,regex
+    ./b2 -j $numCpuCores variant=debug link=static threading=multi runtime-link=shared --layout=tagged install
+    ./b2 -j $numCpuCores variant=release link=static threading=multi runtime-link=shared --layout=tagged install
+    cd ..
+    rm -rf $boostLabel
+    rm "$boostLabel.tar.gz"
+}
+
+if [ -d include/boost ]; then
+    printf "${SetColorToYELLOW}Do you wish to download and (re)build Boost library dependencies from source?${SetNoColor}"
+    while true; do
+        read -p " [yes/no] " yn
+        case $yn in
+            [Yy]* ) buildBoost;;
+            [Nn]* ) ;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+fi
 
 # # #
-# INSTALL POCO
+# BUILD POCO
 #
-printf "${SetColorToYELLOW}Downloading POCO C++ libs source...${SetNoColor}\n"
-pocoLabel='poco-1.9.0'
-pocoTarFile=$pocoLabel"-all.tar.gz"
-pocoXDir=$pocoLabel"-all"
-wget "https://pocoproject.org/releases/poco-1.9.0/$pocoTarFile"
-printf "${SetColorToYELLOW}Unpacking POCO C++ libs source...${SetNoColor}\n"
-tar -xf $pocoTarFile
-cd $pocoXDir
-printf "${SetColorToYELLOW}Building POCO C++ libs...${SetNoColor}\n"
-./configure --omit=Data/MySQL,Data/SQLite,Dynamic,JSON,MongoDB,PageCompiler,Redis --static --no-tests --no-samples --prefix=../
-make -s -j $numCpuCores || exit
-make install
-cd ..
-rm -rf $pocoXDir
-rm $pocoTarFile
+function buildPoco()
+{
+    find ./lib | grep Poco | xargs rm
+    { ls include/Poco && rm -rf include/Poco } &> /dev/null
+    printf "${SetColorToYELLOW}Downloading POCO C++ libs source...${SetNoColor}\n"
+    pocoLabel='poco-1.9.0'
+    pocoTarFile=$pocoLabel"-all.tar.gz"
+    pocoXDir=$pocoLabel"-all"
+    wget "https://pocoproject.org/releases/poco-1.9.0/$pocoTarFile"
+    printf "${SetColorToYELLOW}Unpacking POCO C++ libs source...${SetNoColor}\n"
+    tar -xf $pocoTarFile
+    cd $pocoXDir
+    printf "${SetColorToYELLOW}Building POCO C++ libs...${SetNoColor}\n"
+    ./configure --omit=Data/MySQL,Data/SQLite,Dynamic,JSON,MongoDB,PageCompiler,Redis --static --no-tests --no-samples --prefix=../
+    make -s -j $numCpuCores || exit
+    make install
+    cd ..
+    rm -rf $pocoXDir
+    rm $pocoTarFile
+}
 
+if [ -d include/Poco ]; then
+    printf "${SetColorToYELLOW}Do you wish to download and (re)build POCO C++ library dependencies from source?${SetNoColor}"
+    while true; do
+        read -p " [yes/no] " yn
+        case $yn in
+            [Yy]* ) buildPoco;;
+            [Nn]* ) ;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+fi

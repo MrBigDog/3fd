@@ -23,8 +23,8 @@ include_directories(
     "${PROJECT_SOURCE_DIR}/../gtest/include"
     "${PROJECT_SOURCE_DIR}/../OpenCL"
     "${PROJECT_SOURCE_DIR}/../btree"
-    "$ENV{POCO_ROOT}/include"
-    "$ENV{BOOST_HOME}/include"
+    "${PROJECT_SOURCE_DIR}/../build/include"
+    "${PROJECT_SOURCE_DIR}/../build/include"
 )
 
 ########################
@@ -47,23 +47,23 @@ if(buildType STREQUAL release)
     add_definitions(-DNDEBUG)
     set_target_properties(3FD            PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../3FD/lib3FD.a")
     set_target_properties(gtest          PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../gtest/libgtest.a")
-    set_target_properties(boost_system   PROPERTIES IMPORTED_LOCATION "$ENV{BOOST_HOME}/lib/libboost_system-mt.a")
-    set_target_properties(boost_thread   PROPERTIES IMPORTED_LOCATION "$ENV{BOOST_HOME}/lib/libboost_thread-mt.a")
-    set_target_properties(PocoDataODBC   PROPERTIES IMPORTED_LOCATION "$ENV{POCO_ROOT}/lib/libPocoDataODBC.a")
-    set_target_properties(PocoData       PROPERTIES IMPORTED_LOCATION "$ENV{POCO_ROOT}/lib/libPocoData.a")
-    set_target_properties(PocoUtil       PROPERTIES IMPORTED_LOCATION "$ENV{POCO_ROOT}/lib/libPocoUtil.a")
-    set_target_properties(PocoXML        PROPERTIES IMPORTED_LOCATION "$ENV{POCO_ROOT}/lib/libPocoXML.a")
-    set_target_properties(PocoFoundation PROPERTIES IMPORTED_LOCATION "$ENV{POCO_ROOT}/lib/libPocoFoundation.a")
+    set_target_properties(boost_system   PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libboost_system-mt.a")
+    set_target_properties(boost_thread   PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libboost_thread-mt.a")
+    set_target_properties(PocoDataODBC   PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libPocoDataODBC.a")
+    set_target_properties(PocoData       PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libPocoData.a")
+    set_target_properties(PocoUtil       PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libPocoUtil.a")
+    set_target_properties(PocoXML        PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libPocoXML.a")
+    set_target_properties(PocoFoundation PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libPocoFoundation.a")
 elseif(buildType STREQUAL debug)
     set_target_properties(3FD            PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../3FD/lib3FDd.a")
     set_target_properties(gtest          PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../gtest/libgtestd.a")
-    set_target_properties(boost_system   PROPERTIES IMPORTED_LOCATION "$ENV{BOOST_HOME}/lib/libboost_system-mt-d.a")
-    set_target_properties(boost_thread   PROPERTIES IMPORTED_LOCATION "$ENV{BOOST_HOME}/lib/libboost_thread-mt-d.a")
-    set_target_properties(PocoDataODBC   PROPERTIES IMPORTED_LOCATION "$ENV{POCO_ROOT}/lib/libPocoDataODBCd.a")
-    set_target_properties(PocoData       PROPERTIES IMPORTED_LOCATION "$ENV{POCO_ROOT}/lib/libPocoDatad.a")
-    set_target_properties(PocoUtil       PROPERTIES IMPORTED_LOCATION "$ENV{POCO_ROOT}/lib/libPocoUtild.a")
-    set_target_properties(PocoXML        PROPERTIES IMPORTED_LOCATION "$ENV{POCO_ROOT}/lib/libPocoXMLd.a")
-    set_target_properties(PocoFoundation PROPERTIES IMPORTED_LOCATION "$ENV{POCO_ROOT}/lib/libPocoFoundationd.a")
+    set_target_properties(boost_system   PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libboost_system-mt-d.a")
+    set_target_properties(boost_thread   PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libboost_thread-mt-d.a")
+    set_target_properties(PocoDataODBC   PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libPocoDataODBCd.a")
+    set_target_properties(PocoData       PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libPocoDatad.a")
+    set_target_properties(PocoUtil       PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libPocoUtild.a")
+    set_target_properties(PocoXML        PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libPocoXMLd.a")
+    set_target_properties(PocoFoundation PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libPocoFoundationd.a")
 endif()
 
 # Place the configuration file along with the executable:

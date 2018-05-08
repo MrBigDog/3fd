@@ -6,10 +6,6 @@ cmake_minimum_required(VERSION 2.6)
 
 project(UnitTests)
 
-find_package(boost    REQUIRED)
-find_package(poco     REQUIRED)
-find_package(rapidxml REQUIRED)
-
 #####################
 # Macro definitions:
 
@@ -26,8 +22,8 @@ include_directories(
     "${PROJECT_SOURCE_DIR}/../3FD"
     "${PROJECT_SOURCE_DIR}/../gtest/include"
     "${PROJECT_SOURCE_DIR}/../btree"
-    "$ENV{POCO_ROOT}/include"
-    "$ENV{BOOST_HOME}/include"
+    "${PROJECT_SOURCE_DIR}/../build/include"
+    "${PROJECT_SOURCE_DIR}/../include"
 )
 
 ########################
@@ -46,15 +42,15 @@ if(buildType STREQUAL release)
     add_definitions(-DNDEBUG)
     set_target_properties(3FD            PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../3FD/lib3FD.a")
     set_target_properties(gtest          PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../gtest/libgtest.a")
-    set_target_properties(PocoUtil       PROPERTIES IMPORTED_LOCATION "$ENV{POCO_ROOT}/lib/libPocoUtil.a")
-    set_target_properties(PocoXML        PROPERTIES IMPORTED_LOCATION "$ENV{POCO_ROOT}/lib/libPocoXML.a")
-    set_target_properties(PocoFoundation PROPERTIES IMPORTED_LOCATION "$ENV{POCO_ROOT}/lib/libPocoFoundation.a")
+    set_target_properties(PocoUtil       PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libPocoUtil.a")
+    set_target_properties(PocoXML        PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libPocoXML.a")
+    set_target_properties(PocoFoundation PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libPocoFoundation.a")
 elseif(buildType STREQUAL debug)
     set_target_properties(3FD            PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../3FD/lib3FDd.a")
     set_target_properties(gtest          PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../gtest/libgtestd.a")
-    set_target_properties(PocoUtil       PROPERTIES IMPORTED_LOCATION "$ENV{POCO_ROOT}/lib/libPocoUtild.a")
-    set_target_properties(PocoXML        PROPERTIES IMPORTED_LOCATION "$ENV{POCO_ROOT}/lib/libPocoXMLd.a")
-    set_target_properties(PocoFoundation PROPERTIES IMPORTED_LOCATION "$ENV{POCO_ROOT}/lib/libPocoFoundationd.a")
+    set_target_properties(PocoUtil       PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libPocoUtild.a")
+    set_target_properties(PocoXML        PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libPocoXMLd.a")
+    set_target_properties(PocoFoundation PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libPocoFoundationd.a")
 endif()
 
 # Place the configuration file along with the executable:

@@ -27,8 +27,7 @@ include_directories(
     "${PROJECT_SOURCE_DIR}"
     "${PROJECT_SOURCE_DIR}/../btree"
     "${PROJECT_SOURCE_DIR}/../OpenCL"
-    "$ENV{POCO_ROOT}/include"
-    "$ENV{BOOST_HOME}/include"
+    "${PROJECT_SOURCE_DIR}/../build/include"
 )
 
 ########################
@@ -61,7 +60,6 @@ add_library(3FD STATIC
     opencl_impl_program.cpp
     opencl_impl_programmanifest.cpp
     runtime.cpp
-    sqlite3.c
     sqlite_databaseconn.cpp
     sqlite_dbconnpool.cpp
     sqlite_prepstatement.cpp

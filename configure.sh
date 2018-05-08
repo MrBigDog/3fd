@@ -10,9 +10,6 @@ else
     exit
 fi
 
-export POCO_ROOT=$(pwd)/build
-export BOOST_HOME=$(pwd)/build
-
 { ls build/include/3FD || mkdir -p build/include/3FD; } &> /dev/null
 { ls build/lib || mkdir -p build/lib; } &> /dev/null
 { ls build/bin || mkdir -p build/bin; } &> /dev/null
