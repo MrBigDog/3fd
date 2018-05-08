@@ -80,8 +80,7 @@ function buildRapidxml()
     RAPIDXML='rapidxml-1.13'
     wget "https://netcologne.dl.sourceforge.net/project/rapidxml/rapidxml/rapidxml%201.13/${RAPIDXML}.zip"
     unzip "${RAPIDXML}.zip"
-    mkdir -p include/rapidxml
-    mv $RAPIDXML/*.hpp include/rapidxml/
+    mv $RAPIDXML/*.hpp include/
     rm -rf $RAPIDXML*
 }
 
@@ -92,8 +91,12 @@ function buildSqlite3()
     wget "http://sqlite.org/2018/${SQLITE}.tar.gz"
     tar -xf "${SQLITE}.tar.gz"
     cd $SQLITE
-    ./configure
+    ./configure --enable-shared=no
     make
+    cd ..
+    cp $SQLITE/sqlite3.h include/
+    cp $SQLITE/.libs/libsqlite3.a lib/
+    rm -rf $SQLITE*
 }
 
 if [ -d include ]; then
