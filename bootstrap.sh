@@ -3,15 +3,7 @@
 UBUNTU=$(cat /etc/issue | grep -i ubuntu | awk -F" " '{print $2}' | awk -F"." '{print $1}')
 AMAZON=$(cat /etc/issue | grep -i "amazon linux ami release" | awk -F" " '{print $5}' | awk -F"." '{print $1}')
 
-export SetColorToRED='\033[0;31m';
-export SetColorToLightRED='\033[1;31m';
 export SetColorToYELLOW='\033[0;33m';
-export SetColorToLightYELLOW='\033[1;33m';
-export SetColorToGREEN='\033[0;32m';
-export SetColorToLightGREEN='\033[1;32m';
-export SetColorToBLUE='\033[0;34m';
-export SetColorToLightBLUE='\033[1;34m';
-export SetColorToWHITE='\033[0;37m';
 export SetNoColor='\033[0m';
 
 # # #
@@ -19,6 +11,12 @@ export SetNoColor='\033[0m';
 #
 
 if [ -n "$UBUNTU" ] && [ $UBUNTU -gt 14 ]; then
+
+    if [ -z $CXX ] && [ -z "$(dpkg -l | grep 'g++')" ]; then
+        printf "${SetColorToYELLOW}Installing GNU C++ compiler...${SetNoColor}\n"
+        sudo apt install --assume-yes g++
+    fi
+
     printf "${SetColorToYELLOW}Checking dependencies...${SetNoColor}\n"
     sudo apt install --assume-yes cmake unixodbc unixodbc-dev openssl libssl-dev
 
@@ -27,11 +25,11 @@ if [ -n "$UBUNTU" ] && [ $UBUNTU -gt 14 ]; then
     # MSSQL TOOLS not yet installed?
     if [ -z "$HAS_MSSQL_TOOLS" ]; then
         printf "${SetColorToYELLOW}Installing MSSQL tools...${SetNoColor}\n"
-        curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
-        curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
-        apt-get update
-        ACCEPT_EULA=Y apt-get install msodbcsql
-        ACCEPT_EULA=Y apt-get install mssql-tools
+        curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+        sudo curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
+        sudo apt-get update
+        ACCEPT_EULA=Y sudo apt-get install msodbcsql
+        ACCEPT_EULA=Y sudo apt-get install mssql-tools
         echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bash_profile
         echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc
         source ~/.bashrc
@@ -70,10 +68,21 @@ fi
 # ./vcpkg install boost-lockfree boost-regex poco rapidxml sqlite3
 # cd ..
 
-numCpuCores=$(grep -c ^processor /proc/cpuinfo)
+if [ -d build ]; then
+    printf "${SetColorToYELLOW}Do you wish to download and rebuild Boost and POCO C++ frou source?${SetNoColor}"
+    while true; do
+        read -p " [yes/no] " yn
+        case $yn in
+            [Yy]* ) rm -rf build;;
+            [Nn]* ) exit;;
+            * ) echo "Please answer yes or no.";;
+        esac
+    done
+fi
 
-{ ls build || mkdir -p build; } &> /dev/null
-cd build
+mkdir build && cd build
+
+numCpuCores=$(grep -c ^processor /proc/cpuinfo)
 
 # # #
 # INSTALL BOOST
@@ -87,9 +96,8 @@ tar -xf "$boostLabel.tar.gz"
 printf "${SetColorToYELLOW}Building Boost...${SetNoColor}\n"
 cd $boostLabel
 ./bootstrap.sh --prefix=../ --with-libraries=system,thread,regex
-./b2 -j $numCpuCores variant=debug link=static threading=multi runtime-link=shared --layout=tagged
-./b2 -j $numCpuCores variant=release link=static threading=multi runtime-link=shared --layout=tagged
-./b2 install
+./b2 -j $numCpuCores variant=debug link=static threading=multi runtime-link=shared --layout=tagged install
+./b2 -j $numCpuCores variant=release link=static threading=multi runtime-link=shared --layout=tagged install
 cd ..
 rm -rf $boostLabel
 rm "$boostLabel.tar.gz"
@@ -107,7 +115,7 @@ tar -xf $pocoTarFile
 cd $pocoXDir
 printf "${SetColorToYELLOW}Building POCO C++ libs...${SetNoColor}\n"
 ./configure --omit=Data/MySQL,Data/SQLite,Dynamic,JSON,MongoDB,PageCompiler,Redis --static --no-tests --no-samples --prefix=../
-make -s -j $numCpuCores || return
+make -s -j $numCpuCores || exit
 make install
 cd ..
 rm -rf $pocoXDir
