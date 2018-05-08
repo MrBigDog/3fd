@@ -79,7 +79,6 @@ target_link_libraries(UnitTests
     3FD
     pthread
     PocoUtil PocoXML PocoFoundation
-    rapidxml
 )
 
 ################

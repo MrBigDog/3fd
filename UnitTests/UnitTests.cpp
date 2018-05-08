@@ -2,7 +2,6 @@
 //
 
 #include "stdafx.h"
-#include <vld.h>
 #include "preprocessing.h"
 
 #ifdef _3FD_CONSOLE_AVAILABLE

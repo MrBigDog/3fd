@@ -91,11 +91,9 @@ function buildSqlite3()
     wget "http://sqlite.org/2018/${SQLITE}.tar.gz"
     tar -xf "${SQLITE}.tar.gz"
     cd $SQLITE
-    ./configure --enable-shared=no
-    make
+    ./configure --enable-shared=no --prefix=../
+    make && make install
     cd ..
-    cp $SQLITE/sqlite3.h include/
-    cp $SQLITE/.libs/libsqlite3.a lib/
     rm -rf $SQLITE*
 }
 
