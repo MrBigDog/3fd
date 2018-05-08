@@ -68,7 +68,7 @@ fi
 # ./vcpkg install boost-lockfree boost-regex poco rapidxml sqlite3
 # cd ..
 
-{ ls build || mkdir build } &> /dev/null
+{ ls build || mkdir build; } &> /dev/null
 cd build
 
 # # #
@@ -101,11 +101,16 @@ if [ -d include ]; then
     while true; do
         read -p " [yes/no] " yn
         case $yn in
-            [Yy]* ) buildRapidxml; buildSqlite3;;
-            [Nn]* ) ;;
+            [Yy]* ) buildRapidxml
+                    buildSqlite3
+                    break;;
+            [Nn]* ) break;;
             * ) echo "Please answer yes or no.";;
         esac
     done
+else
+    buildRapidxml
+    buildSqlite3
 fi
 
 numCpuCores=$(grep -c ^processor /proc/cpuinfo)
@@ -116,7 +121,7 @@ numCpuCores=$(grep -c ^processor /proc/cpuinfo)
 function buildBoost()
 {
     find ./lib | grep boost | xargs rm
-    { ls include/boost && rm -rf include/boost } &> /dev/null
+    { ls include/boost && rm -rf include/boost; } &> /dev/null
     printf "${SetColorToYELLOW}Downloading Boost source...${SetNoColor}\n"
     boostVersion='1.67.0'
     boostLabel="boost_1_67_0"
@@ -138,11 +143,14 @@ if [ -d include/boost ]; then
     while true; do
         read -p " [yes/no] " yn
         case $yn in
-            [Yy]* ) buildBoost;;
-            [Nn]* ) ;;
+            [Yy]* ) buildBoost
+                    break;;
+            [Nn]* ) break;;
             * ) echo "Please answer yes or no.";;
         esac
     done
+else
+    buildBoost
 fi
 
 # # #
@@ -151,7 +159,7 @@ fi
 function buildPoco()
 {
     find ./lib | grep Poco | xargs rm
-    { ls include/Poco && rm -rf include/Poco } &> /dev/null
+    { ls include/Poco && rm -rf include/Poco; } &> /dev/null
     printf "${SetColorToYELLOW}Downloading POCO C++ libs source...${SetNoColor}\n"
     pocoLabel='poco-1.9.0'
     pocoTarFile=$pocoLabel"-all.tar.gz"
@@ -174,9 +182,12 @@ if [ -d include/Poco ]; then
     while true; do
         read -p " [yes/no] " yn
         case $yn in
-            [Yy]* ) buildPoco;;
-            [Nn]* ) ;;
+            [Yy]* ) buildPoco
+                    break;;
+            [Nn]* ) break;;
             * ) echo "Please answer yes or no.";;
         esac
     done
+else
+    buildPoco
 fi
