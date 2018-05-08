@@ -25,7 +25,7 @@ if [ -n "$UBUNTU" ] && [ $UBUNTU -gt 14 ]; then
     # MSSQL TOOLS not yet installed?
     if [ -z "$HAS_MSSQL_TOOLS" ]; then
         printf "${SetColorToYELLOW}Installing MSSQL tools...${SetNoColor}\n"
-        curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+        curl http://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
         sudo curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
         sudo apt-get update
         ACCEPT_EULA=Y sudo apt-get install msodbcsql
@@ -58,7 +58,7 @@ fi
 #
 # cd /opt
 # { ls vcpkg || git clone https://github.com/Microsoft/vcpkg; } &> /dev/null
-# cd vcpkg 
+# cd vcpkg
 # if [ ! -f ./vcpkg ]; then
 #     printf "${SetColorToYELLOW}Installing vcpkg...${SetNoColor}\n"
 #     ./bootstrap-vcpkg.sh
@@ -85,9 +85,6 @@ function buildRapidxml()
     rm -rf $RAPIDXML*
 }
 
-# # #
-# BUILD SQLITE3
-#
 function buildSqlite3()
 {
     find . | grep 'sqlite' | xargs rm -rf
