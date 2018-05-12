@@ -2,11 +2,11 @@
 
 MODE=$1
 
-if [ -n $MODE ] && [ -n $(echo $MODE | grep -i '^debug$') ];
+if [ -n $MODE ] && [ -n "$(echo $MODE | grep -i '^debug$')" ];
 then
     CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=$MODE -DCMAKE_DEBUG_POSTFIX=d -DCMAKE_CXX_FLAGS='-std=c++11'"
 
-elif [ -n $MODE ] && [ -n $(echo $MODE | grep -i '^release$') ];
+elif [ -n $MODE ] && [ -n "$(echo $MODE | grep -i '^release$')" ];
 then
     CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=$MODE -DCMAKE_CXX_FLAGS='-std=c++11'"
 else
