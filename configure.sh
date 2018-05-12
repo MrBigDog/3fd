@@ -2,9 +2,13 @@
 
 MODE=$1
 
-if [[ -n $MODE ]] && [[ $MODE == $(echo $MODE | grep -i 'debug\|release') ]];
+if [ -n $MODE ] && [ -n $(echo $MODE | grep -i '^debug$') ];
 then
     CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=$MODE -DCMAKE_DEBUG_POSTFIX=d -DCMAKE_CXX_FLAGS='-std=c++11'"
+
+elif [ -n $MODE ] && [ -n $(echo $MODE | grep -i '^release$') ];
+then
+    CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=$MODE -DCMAKE_CXX_FLAGS='-std=c++11'"
 else
     printf 'ERROR! Usage: ./configure.sh [debug|release]\n\n'
     exit

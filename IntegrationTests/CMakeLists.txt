@@ -90,10 +90,9 @@ add_executable(IntegrationTests
 target_link_libraries(IntegrationTests 
     gtest
     3FD
-    odbc pthread dl
+    odbc sqlite3 pthread dl
     boost_system boost_thread
     PocoDataODBC PocoData PocoUtil PocoXML PocoFoundation
-    sqlite3
 )
 
 ################

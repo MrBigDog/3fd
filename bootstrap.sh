@@ -7,12 +7,39 @@ export SetColorToYELLOW='\033[0;33m';
 export SetNoColor='\033[0m';
 
 # # #
+# INSTALL MSSQL TOOLS & ODBC DRIVER
+#
+function installMsSqlOdbc()
+{
+    printf "${SetColorToYELLOW}Installing MSSQL tools...${SetNoColor}\n"
+    curl http://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+    sudo curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
+    sudo apt-get update
+    ACCEPT_EULA=Y sudo apt install --assume-yes msodbcsql
+    ACCEPT_EULA=Y sudo apt install --assume-yes mssql-tools
+
+    if [ -f $HOME/.bash_profile ] && [ -z "$(cat $HOME/.bash_profile | grep '$PATH:/opt/mssql-tools/bins')" ];
+    then
+        echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bash_profile
+    fi
+
+    if [ -f $HOME/.profile ] && [ -z "$(cat $HOME/.profile | grep '$PATH:/opt/mssql-tools/bins')" ];
+    then
+        echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.profile
+    fi
+
+    export PATH="$PATH:/opt/mssql-tools/bin"
+}
+
+# # #
 # INSTALL PACKAGES & TOOLCHAIN
 #
 
-if [ -n "$UBUNTU" ] && [ $UBUNTU -gt 14 ]; then
+if [ -n "$UBUNTU" ] && [ $UBUNTU -gt 14 ];
+then
 
-    if [ -z $CXX ] && [ -z "$(dpkg -l | grep 'g++')" ]; then
+    if [ -z $CXX ] && [ -z "$(dpkg -l | grep 'g++')" ];
+    then
         printf "${SetColorToYELLOW}Installing GNU C++ compiler...${SetNoColor}\n"
         sudo apt install --assume-yes g++
     fi
@@ -23,19 +50,22 @@ if [ -n "$UBUNTU" ] && [ $UBUNTU -gt 14 ]; then
     HAS_MSSQL_TOOLS=$(dpkg -l | grep "mssql-tools")
 
     # MSSQL TOOLS not yet installed?
-    if [ -z "$HAS_MSSQL_TOOLS" ]; then
-        printf "${SetColorToYELLOW}Installing MSSQL tools...${SetNoColor}\n"
-        curl http://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-        sudo curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
-        sudo apt-get update
-        ACCEPT_EULA=Y sudo apt-get install msodbcsql
-        ACCEPT_EULA=Y sudo apt-get install mssql-tools
-        echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bash_profile
-        echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc
-        source ~/.bashrc
+    if [ -z "$HAS_MSSQL_TOOLS" ];
+    then
+        printf "${SetColorToYELLOW}Do you wish to install Microsoft SQL Server ODBC driver?${SetNoColor}"
+        while true; do
+            read -p " [yes/no] " yn
+            case $yn in
+                [Yy]* ) installMsSqlOdbc
+                        break;;
+                [Nn]* ) break;;
+                * ) printf "Please answer yes or no.";;
+            esac
+        done
     fi
 
-elif [ -n "$AMAZON" ] && [ $AMAZON -gt 2017 ]; then
+elif [ -n "$AMAZON" ] && [ $AMAZON -gt 2017 ];
+then
     printf "${SetColorToYELLOW}Checking dependencies...${SetNoColor}\n"
     yum groups install -y development
     yum groups install -y development-libs
@@ -59,7 +89,8 @@ fi
 # cd /opt
 # { ls vcpkg || git clone https://github.com/Microsoft/vcpkg; } &> /dev/null
 # cd vcpkg
-# if [ ! -f ./vcpkg ]; then
+# if [ ! -f ./vcpkg ];
+# then
 #     printf "${SetColorToYELLOW}Installing vcpkg...${SetNoColor}\n"
 #     ./bootstrap-vcpkg.sh
 # fi
@@ -90,8 +121,10 @@ function buildSqlite3()
     SQLITE='sqlite-autoconf-3230100'
     wget "http://sqlite.org/2018/${SQLITE}.tar.gz"
     tar -xf "${SQLITE}.tar.gz"
+    INSTALLDIR=$(pwd)
     cd $SQLITE
-    ./configure --enable-shared=no --prefix=../
+    printf "${SetColorToYELLOW}Building SQLite3 as static library (release)...${SetNoColor}\n"
+    ./configure --enable-shared=no --prefix=$INSTALLDIR
     make && make install
     cd ..
     rm -rf $SQLITE*
@@ -106,7 +139,7 @@ if [ -d include ]; then
                     buildSqlite3
                     break;;
             [Nn]* ) break;;
-            * ) echo "Please answer yes or no.";;
+            * ) printf "Please answer yes or no.";;
         esac
     done
 else
@@ -147,7 +180,7 @@ if [ -d include/boost ]; then
             [Yy]* ) buildBoost
                     break;;
             [Nn]* ) break;;
-            * ) echo "Please answer yes or no.";;
+            * ) printf "Please answer yes or no.";;
         esac
     done
 else
@@ -165,7 +198,7 @@ function buildPoco()
     pocoLabel='poco-1.9.0'
     pocoTarFile=$pocoLabel"-all.tar.gz"
     pocoXDir=$pocoLabel"-all"
-    wget "https://pocoproject.org/releases/poco-1.9.0/$pocoTarFile"
+    wget "https://pocoproject.org/releases/${pocoLabel}/${pocoTarFile}"
     printf "${SetColorToYELLOW}Unpacking POCO C++ libs source...${SetNoColor}\n"
     tar -xf $pocoTarFile
     cd $pocoXDir
@@ -186,7 +219,7 @@ if [ -d include/Poco ]; then
             [Yy]* ) buildPoco
                     break;;
             [Nn]* ) break;;
-            * ) echo "Please answer yes or no.";;
+            * ) printf "Please answer yes or no.";;
         esac
     done
 else
