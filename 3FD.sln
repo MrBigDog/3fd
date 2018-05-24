@@ -37,14 +37,23 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution", "Solution", "{60F3AE6C-C6A3-4C8B-A98A-9044DE809838}"
 	ProjectSection(SolutionItems) = preProject
 		Acknowledgements.txt = Acknowledgements.txt
-		bootstrap.sh = bootstrap.sh
 		build.ps1 = build.ps1
+		CreateMsSqlSvcBrokerDB.sql = CreateMsSqlSvcBrokerDB.sql
+		LICENSE = LICENSE
+		README = README
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "POSIX", "POSIX", "{7F50EEA8-C82B-46E6-931B-9D2339A47419}"
+	ProjectSection(SolutionItems) = preProject
+		bootstrap.sh = bootstrap.sh
 		build.sh = build.sh
 		configure.sh = configure.sh
-		vcpkg_port\CONTROL = vcpkg_port\CONTROL
-		LICENSE = LICENSE
-		vcpkg_port\portfile.cmake = vcpkg_port\portfile.cmake
-		README = README
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "vcpkg", "vcpkg", "{470B7859-6C5B-45FB-8FC7-E4D5806B9ABE}"
+	ProjectSection(SolutionItems) = preProject
+		vcpkg\ports\3fd\CONTROL = vcpkg\ports\3fd\CONTROL
+		vcpkg\ports\3fd\portfile.cmake = vcpkg\ports\3fd\portfile.cmake
 	EndProjectSection
 EndProject
 Global
@@ -275,6 +284,8 @@ Global
 		{B650C884-6640-4FEE-9C5B-62E4D84D9E0F} = {EE86AB66-09DF-45EB-A42A-ED426AF3266E}
 		{AD508BAA-0192-4EDB-B1F5-23DC9CC2EC0C} = {EE86AB66-09DF-45EB-A42A-ED426AF3266E}
 		{C427C362-4B09-4C3F-8578-F58521328DF0} = {EE86AB66-09DF-45EB-A42A-ED426AF3266E}
+		{7F50EEA8-C82B-46E6-931B-9D2339A47419} = {60F3AE6C-C6A3-4C8B-A98A-9044DE809838}
+		{470B7859-6C5B-45FB-8FC7-E4D5806B9ABE} = {60F3AE6C-C6A3-4C8B-A98A-9044DE809838}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3FB930DD-93C4-4123-8373-DCB40B20A7CA}

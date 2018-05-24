@@ -2,24 +2,20 @@
 #
 # Usage:
 #
-# .\build.ps1 -arch {x86|x64|ARM|all} -xp {yes|no} -rebuild {yes|no}
+# .\build.ps1 -arch {x86|x64|ARM|all} -rebuild {yes|no}
 #
 # Builds all the projects in VC++ solution 3FD.sln that are compilable for the given
 # architecture(s). Builds are by default incremental, but can also be complete rebuilds.
 # Projects of UWP apps produce packages that are easy to deploy with a click. All of
-# this goes to the generated build directory in the solution root directory, along with
-# headers, libraries, templates, samples and test applications.
-#
-# There is the option of downloading and building from source the dependency libraries
-# Boost and POCO C++. They are set to the specific release with which 3FD projects are 
-# tested and configured to work. They are installed into a version specific directory
-# in a location specified by the enviroment variables BOOST_HOME and POCO_ROOT, those
-# MUST BE set prior to script execution.
+# them go to the generated build directory in the solution root directory, along with
+# test applications.
 #
 # In order to build the projects, MSBuild is employed. The script looks for MSBuild.exe
 # (32 bits) executable first in "Microsoft Visual Studio" installation directory, then
 # in %PROGRAMFILES(x86)%\MSBuild, giving priority to the latest release.
 #
+# Support for Windows XP is currently disabled because VCPKG does not currently support
+# targetting the XP compatible toolset
 
 # =============================================
 #           PARAMETERS & ENVIRONMENT
@@ -27,15 +23,15 @@
 
 param (
     [string]$arch = $(Read-Host 'Architecture (x86, x64, ARM, all)'),
-    [string]$xp = $(Read-Host 'Use WinXP-compatible toolset? (no/yes)'),
+#   [string]$xp = $(Read-Host 'Use WinXP-compatible toolset? (no/yes)'),
     [string]$rebuild = $(Read-Host 'Rebuild? (no/yes)')
 )
 
-if (($arch.ToLower() -eq 'arm') -and ($xp -eq 'yes'))
-{
-    Write-Host 'Nothing to build for ARM with WinXP-compatible toolset!' -ForegroundColor yellow;
-    exit;
-}
+# if (($arch.ToLower() -eq 'arm') -and ($xp -eq 'yes'))
+# {
+#     Write-Host 'Nothing to build for ARM with WinXP-compatible toolset!' -ForegroundColor yellow;
+#     exit;
+# }
 
 [string]$task;
 
@@ -63,7 +59,6 @@ function AppendFile ([string]$file, [string] $line)
              -Append;
 }
 
-
 # # # # #
 # displays a message in the console but also in the log
 function WriteConsole ([string] $message)
@@ -80,7 +75,6 @@ function WriteConsole ([string] $message)
              -Append;
 }
 
-
 # # # # #
 # displays an error message only
 function DisplayError ([string] $message)
@@ -96,7 +90,6 @@ function DisplayError ([string] $message)
              -Encoding ASCII `
              -Append;
 }
-
 
 # # # # #
 # displays an error messages and terminates script execution
@@ -209,7 +202,6 @@ function FindVisualStudioInstallation ()
     {
         RaiseError 'vcvarsall.bat not found!';
     }
-
 }
 
 # # # # #
@@ -364,25 +356,28 @@ function MsBuild (
 
 ###
 # Check BOOST_HOME:
+#
+# This section is currently disabled because now VCPKG
+# is responsible for the build of dependency libraries
 
-[string]$boostVersion = '1.66.0';
-[string]$boostZipLabel = 'boost_1_66_0';
-[string]$boostHomePathExpSuffix = 'Boost\v' + $boostVersion + '\';
-
-[string]$envVarBoostHome = [Environment]::GetEnvironmentVariable("BOOST_HOME");
-
-if (
-     (-not $envVarBoostHome) -or
-     ( (-not $envVarBoostHome.ToLower().EndsWith($boostHomePathExpSuffix.ToLower())) -and
-       (-not ($envVarBoostHome + '\').ToLower().EndsWith($boostHomePathExpSuffix.ToLower())) )
-   )
-{
-    RaiseError(
-        'The enviroment variable BOOST_HOME must be set! ' +
-        'This build depends of Boost version ' + $boostVersion +
-        ', so you should set BOOST_HOME = path_of_your_choice\' + $boostHomePathExpSuffix
-    );
-}
+# [string]$boostVersion = '1.66.0';
+# [string]$boostZipLabel = 'boost_1_66_0';
+# [string]$boostHomePathExpSuffix = 'Boost\v' + $boostVersion + '\';
+# 
+# [string]$envVarBoostHome = [Environment]::GetEnvironmentVariable("BOOST_HOME");
+# 
+# if (
+#      (-not $envVarBoostHome) -or
+#      ( (-not $envVarBoostHome.ToLower().EndsWith($boostHomePathExpSuffix.ToLower())) -and
+#        (-not ($envVarBoostHome + '\').ToLower().EndsWith($boostHomePathExpSuffix.ToLower())) )
+#    )
+# {
+#     RaiseError(
+#         'The enviroment variable BOOST_HOME must be set! ' +
+#         'This build depends of Boost version ' + $boostVersion +
+#         ', so you should set BOOST_HOME = path_of_your_choice\' + $boostHomePathExpSuffix
+#     );
+# }
 
 
 # # # # #
@@ -539,24 +534,27 @@ function BuildBoostLibs ()
 
 ###
 # Check POCO C++ availability:
+#
+# This section is currently disabled because now VCPKG
+# is responsible for the build of dependency libraries
 
-[string]$pocoVersion = '1.9.0';
-[string]$pocoRootPathExpSuffix = 'POCO\v' + $pocoVersion + '\';
-
-[string]$envVarPocoRoot = [Environment]::GetEnvironmentVariable("POCO_ROOT");
-
-if (
-     (-not $envVarPocoRoot) -or
-     ( (-not $envVarPocoRoot.ToLower().EndsWith($pocoRootPathExpSuffix.ToLower())) -and
-       (-not ($envVarPocoRoot + '\').ToLower().EndsWith($pocoRootPathExpSuffix.ToLower())) )
-   )
-{
-    RaiseError(
-        'The enviroment variable POCO_ROOT must be set! ' +
-        'This build depends on POCO C++ version ' + $pocoVersion +
-        ', so you should set POCO_ROOT = path_of_your_choice\' + $pocoRootPathExpSuffix
-    );
-}
+# [string]$pocoVersion = '1.9.0';
+# [string]$pocoRootPathExpSuffix = 'POCO\v' + $pocoVersion + '\';
+# 
+# [string]$envVarPocoRoot = [Environment]::GetEnvironmentVariable("POCO_ROOT");
+# 
+# if (
+#      (-not $envVarPocoRoot) -or
+#      ( (-not $envVarPocoRoot.ToLower().EndsWith($pocoRootPathExpSuffix.ToLower())) -and
+#        (-not ($envVarPocoRoot + '\').ToLower().EndsWith($pocoRootPathExpSuffix.ToLower())) )
+#    )
+# {
+#     RaiseError(
+#         'The enviroment variable POCO_ROOT must be set! ' +
+#         'This build depends on POCO C++ version ' + $pocoVersion +
+#         ', so you should set POCO_ROOT = path_of_your_choice\' + $pocoRootPathExpSuffix
+#     );
+# }
 
 # # # # #
 # Build POCO C++ libraries
@@ -879,18 +877,18 @@ function InstallCopyARM ([bool]$xpToolset)
 
 function Run ()
 {
-    [string]$mustBuildBoost = $(Read-Host 'Build Boost libraries? (no/yes)');
-    [string]$mustBuildPoco = $(Read-Host 'Build POCO C++ libraries? (no/yes)');
+#   [string]$mustBuildBoost = $(Read-Host 'Build Boost libraries? (no/yes)');
+#   [string]$mustBuildPoco = $(Read-Host 'Build POCO C++ libraries? (no/yes)');
     
-    if ($mustBuildBoost -eq 'yes')
-    {
-        BuildBoostLibs;
-    }
-
-    if ($mustBuildPoco -eq 'yes')
-    {
-        BuildPocoLibs;
-    }
+#   if ($mustBuildBoost -eq 'yes')
+#   {
+#       BuildBoostLibs;
+#   }
+#
+#   if ($mustBuildPoco -eq 'yes')
+#   {
+#       BuildPocoLibs;
+#   }
 
     ###
     # BUILD:

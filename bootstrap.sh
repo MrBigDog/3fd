@@ -115,6 +115,9 @@ function buildRapidxml()
     rm -rf $RAPIDXML*
 }
 
+# # #
+# BUILD SQLITE3
+#
 function buildSqlite3()
 {
     find . | grep 'sqlite' | xargs rm -rf

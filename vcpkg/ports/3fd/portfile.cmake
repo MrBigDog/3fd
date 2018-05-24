@@ -100,4 +100,3 @@ endif()
 # Handle copyright
 file(INSTALL ${SOURCE_PATH}/LICENSE DESTINATION ${CURRENT_PACKAGES_DIR}/share/3fd RENAME copyright)
 file(INSTALL ${SOURCE_PATH}/Acknowledgements.txt DESTINATION ${CURRENT_PACKAGES_DIR}/share/3fd)
-
