@@ -1,10 +1,29 @@
 #!/bin/bash
 
-UBUNTU=$(cat /etc/issue | grep -i ubuntu | awk -F" " '{print $2}' | awk -F"." '{print $1}')
+UBUNTU_VERSION=$(cat /etc/issue | grep -i ubuntu | awk -F" " '{print $2}')
+UBUNTU_MAJVER=$(echo $UBUNTU_VERSION | awk -F"." '{print $1}')
 AMAZON=$(cat /etc/issue | grep -i "amazon linux ami release" | awk -F" " '{print $5}' | awk -F"." '{print $1}')
 
 export SetColorToYELLOW='\033[0;33m';
 export SetNoColor='\033[0m';
+
+# # #
+# DOWNLOAD WITH RETRY
+#
+function download()
+{
+    for $count in 1 .. 3
+    do
+        wget --retry-connrefused --waitretry=1 --read-timeout=15 --timeout=15 -t 2 --continue --no-dns-cache $1
+
+        if [ $? = 0 ];
+        then
+            break
+        fi
+
+        sleep 1s;
+    done
+}
 
 # # #
 # INSTALL MSSQL TOOLS & ODBC DRIVER
@@ -13,7 +32,7 @@ function installMsSqlOdbc()
 {
     printf "${SetColorToYELLOW}Installing MSSQL tools...${SetNoColor}\n"
     curl http://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-    sudo curl https://packages.microsoft.com/config/ubuntu/16.04/prod.list > /etc/apt/sources.list.d/mssql-release.list
+    sudo curl "https://packages.microsoft.com/config/ubuntu/${UBUNTU_VERSION}/prod.list" > /etc/apt/sources.list.d/mssql-release.list
     sudo apt-get update
     ACCEPT_EULA=Y sudo apt install --assume-yes msodbcsql
     ACCEPT_EULA=Y sudo apt install --assume-yes mssql-tools
@@ -35,7 +54,7 @@ function installMsSqlOdbc()
 # INSTALL PACKAGES & TOOLCHAIN
 #
 
-if [ -n "$UBUNTU" ] && [ $UBUNTU -gt 14 ];
+if [ -n "$UBUNTU_MAJVER" ] && [ $UBUNTU_MAJVER -gt 14 ];
 then
 
     if [ -z $CXX ] && [ -z "$(dpkg -l | grep 'g++')" ];
@@ -69,7 +88,7 @@ then
     printf "${SetColorToYELLOW}Checking dependencies...${SetNoColor}\n"
     yum groups install -y development
     yum groups install -y development-libs
-    wget https://cmake.org/files/v3.10/cmake-3.10.3.tar.gz
+    download "https://cmake.org/files/v3.10/cmake-3.10.3.tar.gz"
     tar -xf cmake-3.10.3.tar.gz
     cd cmake-3.10.3
     ./bootstrap
@@ -109,7 +128,7 @@ function buildRapidxml()
 {
     find . | grep 'rapidxml' | xargs rm -rf
     RAPIDXML='rapidxml-1.13'
-    wget "https://netcologne.dl.sourceforge.net/project/rapidxml/rapidxml/rapidxml%201.13/${RAPIDXML}.zip"
+    download "https://netcologne.dl.sourceforge.net/project/rapidxml/rapidxml/rapidxml%201.13/${RAPIDXML}.zip"
     unzip "${RAPIDXML}.zip"
     mv $RAPIDXML/*.hpp include/
     rm -rf $RAPIDXML*
@@ -122,7 +141,7 @@ function buildSqlite3()
 {
     find . | grep 'sqlite' | xargs rm -rf
     SQLITE='sqlite-autoconf-3230100'
-    wget "http://sqlite.org/2018/${SQLITE}.tar.gz"
+    download "http://sqlite.org/2018/${SQLITE}.tar.gz"
     tar -xf "${SQLITE}.tar.gz"
     INSTALLDIR=$(pwd)
     cd $SQLITE
@@ -162,7 +181,7 @@ function buildBoost()
     printf "${SetColorToYELLOW}Downloading Boost source...${SetNoColor}\n"
     boostVersion='1.67.0'
     boostLabel="boost_1_67_0"
-    wget "https://dl.bintray.com/boostorg/release/$boostVersion/source/$boostLabel.tar.gz"
+    download "https://dl.bintray.com/boostorg/release/$boostVersion/source/$boostLabel.tar.gz"
     printf "${SetColorToYELLOW}Unpacking Boost source...${SetNoColor}\n"
     tar -xf "$boostLabel.tar.gz"
     printf "${SetColorToYELLOW}Building Boost...${SetNoColor}\n"
@@ -201,7 +220,7 @@ function buildPoco()
     pocoLabel='poco-1.9.0'
     pocoTarFile=$pocoLabel"-all.tar.gz"
     pocoXDir=$pocoLabel"-all"
-    wget "https://pocoproject.org/releases/${pocoLabel}/${pocoTarFile}"
+    download "https://pocoproject.org/releases/${pocoLabel}/${pocoTarFile}"
     printf "${SetColorToYELLOW}Unpacking POCO C++ libs source...${SetNoColor}\n"
     tar -xf $pocoTarFile
     cd $pocoXDir
