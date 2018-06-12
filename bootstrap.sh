@@ -1,10 +1,10 @@
 #!/bin/bash
 
-UBUNTU_VERSION=$(cat /etc/issue | grep -i ubuntu | awk -F" " '{print $2}')
+UBUNTU_VERSION=$(cat /etc/issue | grep -i ubuntu | awk -F" " '{print $2}' | grep '^[0-9]*.[0-9]*')
 UBUNTU_MAJVER=$(echo $UBUNTU_VERSION | awk -F"." '{print $1}')
 AMAZON=$(cat /etc/issue | grep -i "amazon linux ami release" | awk -F" " '{print $5}' | awk -F"." '{print $1}')
 
-USE_CLANG=$(echo $CXX | grep "clang++")
+USE_CLANG=$(echo $CXX | grep 'clang++$')
 
 export SetColorToYELLOW='\033[0;33m';
 export SetNoColor='\033[0m';
@@ -42,12 +42,12 @@ function installMsSqlOdbc()
 
     if [ -f $HOME/.bash_profile ] && [ -z "$(cat $HOME/.bash_profile | grep '$PATH:/opt/mssql-tools/bins')" ];
     then
-        echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bash_profile
+        echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> $HOME/.bash_profile
     fi
 
     if [ -f $HOME/.profile ] && [ -z "$(cat $HOME/.profile | grep '$PATH:/opt/mssql-tools/bins')" ];
     then
-        echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.profile
+        echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> $HOME/.profile
     fi
 
     export PATH="$PATH:/opt/mssql-tools/bin"
