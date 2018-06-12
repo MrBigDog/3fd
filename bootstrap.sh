@@ -4,6 +4,8 @@ UBUNTU_VERSION=$(cat /etc/issue | grep -i ubuntu | awk -F" " '{print $2}')
 UBUNTU_MAJVER=$(echo $UBUNTU_VERSION | awk -F"." '{print $1}')
 AMAZON=$(cat /etc/issue | grep -i "amazon linux ami release" | awk -F" " '{print $5}' | awk -F"." '{print $1}')
 
+USE_CLANG=$(echo $CXX | grep "clang++")
+
 export SetColorToYELLOW='\033[0;33m';
 export SetNoColor='\033[0m';
 
@@ -35,7 +37,7 @@ function installMsSqlOdbc()
     curl "https://packages.microsoft.com/config/ubuntu/${UBUNTU_VERSION}/prod.list" > mssql-release.list
     sudo mv mssql-release.list /etc/apt/sources.list.d/
     sudo apt-get update
-    ACCEPT_EULA=Y sudo apt install --assume-yes msodbcsql17
+    ACCEPT_EULA=Y sudo apt install --assume-yes msodbcsql
     ACCEPT_EULA=Y sudo apt install --assume-yes mssql-tools
 
     if [ -f $HOME/.bash_profile ] && [ -z "$(cat $HOME/.bash_profile | grep '$PATH:/opt/mssql-tools/bins')" ];
@@ -182,17 +184,24 @@ function buildBoost()
     printf "${SetColorToYELLOW}Downloading Boost source...${SetNoColor}\n"
     boostVersion='1.67.0'
     boostLabel="boost_1_67_0"
-    download "https://dl.bintray.com/boostorg/release/$boostVersion/source/$boostLabel.tar.gz"
+    download "https://dl.bintray.com/boostorg/release/${boostVersion}/source/${boostLabel}.tar.gz"
     printf "${SetColorToYELLOW}Unpacking Boost source...${SetNoColor}\n"
-    tar -xf "$boostLabel.tar.gz"
+    tar -xf "${boostLabel}.tar.gz"
     printf "${SetColorToYELLOW}Building Boost...${SetNoColor}\n"
     cd $boostLabel
     ./bootstrap.sh --prefix=../ --with-libraries=system,thread,regex
-    ./b2 -j $numCpuCores variant=debug link=static threading=multi runtime-link=shared --layout=tagged install
-    ./b2 -j $numCpuCores variant=release link=static threading=multi runtime-link=shared --layout=tagged install
+
+    toolset=''
+    if [ -n $USE_CLANG ];
+    then
+        toolset='toolset=clang'
+    fi
+
+    ./b2 -j $numCpuCores $toolset variant=debug link=static threading=multi runtime-link=shared --layout=tagged install
+    ./b2 -j $numCpuCores $toolset variant=release link=static threading=multi runtime-link=shared --layout=tagged install
     cd ..
     rm -rf $boostLabel
-    rm "$boostLabel.tar.gz"
+    rm "${boostLabel}.tar.gz"
 }
 
 if [ -d include/boost ]; then
@@ -226,7 +235,14 @@ function buildPoco()
     tar -xf $pocoTarFile
     cd $pocoXDir
     printf "${SetColorToYELLOW}Building POCO C++ libs...${SetNoColor}\n"
-    ./configure --omit=Data/MySQL,Data/SQLite,Dynamic,JSON,MongoDB,PageCompiler,Redis --static --no-tests --no-samples --prefix=../
+
+    toolset=''
+    if [ -n $USE_CLANG ];
+    then
+        toolset='--config=Linux-clang'
+    fi
+
+    ./configure --omit=Data/MySQL,Data/SQLite,Dynamic,JSON,MongoDB,PageCompiler,Redis $toolset --static --no-tests --no-samples --prefix=../
     make -s -j $numCpuCores || exit
     make install
     cd ..
