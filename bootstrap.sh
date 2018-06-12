@@ -12,7 +12,7 @@ export SetNoColor='\033[0m';
 #
 function download()
 {
-    for $count in 1 .. 3
+    for count in 1 .. 3
     do
         wget --retry-connrefused --waitretry=1 --read-timeout=15 --timeout=15 -t 2 --continue --no-dns-cache $1
 
@@ -31,10 +31,11 @@ function download()
 function installMsSqlOdbc()
 {
     printf "${SetColorToYELLOW}Installing MSSQL tools...${SetNoColor}\n"
-    curl http://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-    sudo curl "https://packages.microsoft.com/config/ubuntu/${UBUNTU_VERSION}/prod.list" > /etc/apt/sources.list.d/mssql-release.list
+    curl "http://packages.microsoft.com/keys/microsoft.asc" | sudo apt-key add -
+    curl "https://packages.microsoft.com/config/ubuntu/${UBUNTU_VERSION}/prod.list" > mssql-release.list
+    sudo mv mssql-release.list /etc/apt/sources.list.d/
     sudo apt-get update
-    ACCEPT_EULA=Y sudo apt install --assume-yes msodbcsql
+    ACCEPT_EULA=Y sudo apt install --assume-yes msodbcsql17
     ACCEPT_EULA=Y sudo apt install --assume-yes mssql-tools
 
     if [ -f $HOME/.bash_profile ] && [ -z "$(cat $HOME/.bash_profile | grep '$PATH:/opt/mssql-tools/bins')" ];
