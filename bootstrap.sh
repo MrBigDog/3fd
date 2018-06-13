@@ -1,6 +1,6 @@
 #!/bin/bash
 
-UBUNTU_VERSION=$(cat /etc/issue | grep -i ubuntu | awk -F" " '{print $2}' | grep '^[0-9]*.[0-9]*')
+UBUNTU_VERSION=$(cat /etc/issue | grep -i ubuntu | awk -F" " '{print $2}' | sed 's/.[0-9]*$//g')
 UBUNTU_MAJVER=$(echo $UBUNTU_VERSION | awk -F"." '{print $1}')
 AMAZON=$(cat /etc/issue | grep -i "amazon linux ami release" | awk -F" " '{print $5}' | awk -F"." '{print $1}')
 
@@ -188,8 +188,9 @@ function buildBoost()
     printf "${SetColorToYELLOW}Unpacking Boost source...${SetNoColor}\n"
     tar -xf "${boostLabel}.tar.gz"
     printf "${SetColorToYELLOW}Building Boost...${SetNoColor}\n"
-    cd $boostLabel
-    ./bootstrap.sh --prefix=../ --with-libraries=system,thread,regex
+    cd $boostLabel/tools/build
+    ./bootstrap.sh
+    cd ../../
 
     toolset=''
     if [ -n $USE_CLANG ];
@@ -197,8 +198,9 @@ function buildBoost()
         toolset='toolset=clang'
     fi
 
-    ./b2 -j $numCpuCores $toolset variant=debug link=static threading=multi runtime-link=shared --layout=tagged install
-    ./b2 -j $numCpuCores $toolset variant=release link=static threading=multi runtime-link=shared --layout=tagged install
+    prefixDir=$(cd ../; pwd)
+    ./tools/build/b2 -j $numCpuCores $toolset variant=debug   link=static threading=multi runtime-link=shared --layout=tagged --prefix=$prefixDir --with=system,thread,regex install
+    ./tools/build/b2 -j $numCpuCores $toolset variant=release link=static threading=multi runtime-link=shared --layout=tagged --prefix=$prefixDir --with=system,thread,regex install
     cd ..
     rm -rf $boostLabel
     rm "${boostLabel}.tar.gz"
