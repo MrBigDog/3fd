@@ -70,7 +70,6 @@ namespace internal {
 // of them.
 const char kPathSeparator = '\\';
 const char kAlternatePathSeparator = '/';
-const char kPathSeparatorString[] = "\\";
 const char kAlternatePathSeparatorString[] = "/";
 # if GTEST_OS_WINDOWS_MOBILE
 // Windows CE doesn't have a current directory. You should not use
@@ -84,7 +83,6 @@ const char kCurrentDirectoryString[] = ".\\";
 # endif  // GTEST_OS_WINDOWS_MOBILE
 #else
 const char kPathSeparator = '/';
-const char kPathSeparatorString[] = "/";
 const char kCurrentDirectoryString[] = "./";
 #endif  // GTEST_OS_WINDOWS
 
@@ -99,7 +97,7 @@ static bool IsPathSeparator(char c) {
 
 // Returns the current working directory, or "" if unsuccessful.
 FilePath FilePath::GetCurrentDir() {
-#if GTEST_OS_WINDOWS_MOBILE
+#if GTEST_OS_WINDOWS_MOBILE || GTEST_OS_WINDOWS_PHONE || GTEST_OS_WINDOWS_RT
   // Windows CE doesn't have a current directory, so we just return
   // something reasonable.
   return FilePath(kCurrentDirectoryString);
@@ -108,7 +106,14 @@ FilePath FilePath::GetCurrentDir() {
   return FilePath(_getcwd(cwd, sizeof(cwd)) == NULL ? "" : cwd);
 #else
   char cwd[GTEST_PATH_MAX_ + 1] = { '\0' };
-  return FilePath(getcwd(cwd, sizeof(cwd)) == NULL ? "" : cwd);
+  char* result = getcwd(cwd, sizeof(cwd));
+# if GTEST_OS_NACL
+  // getcwd will likely fail in NaCl due to the sandbox, so return something
+  // reasonable. The user may have provided a shim implementation for getcwd,
+  // however, so fallback only when failure is detected.
+  return FilePath(result == NULL ? kCurrentDirectoryString : cwd);
+# endif  // GTEST_OS_NACL
+  return FilePath(result == NULL ? "" : cwd);
 #endif  // GTEST_OS_WINDOWS_MOBILE
 }
 
@@ -204,10 +209,9 @@ FilePath FilePath::ConcatPaths(const FilePath& directory,
 bool FilePath::FileOrDirectoryExists() const {
 #if GTEST_OS_WINDOWS_MOBILE
   LPCWSTR unicode = String::AnsiToUtf16(pathname_.c_str());
-  WIN32_FILE_ATTRIBUTE_DATA attributes;
-  GetFileAttributesExW(unicode, GetFileExInfoStandard, &attributes);
+  const DWORD attributes = GetFileAttributes(unicode);
   delete [] unicode;
-  return attributes.dwFileAttributes != kInvalidFileAttributes;
+  return attributes != kInvalidFileAttributes;
 #else
   posix::StatStruct file_stat;
   return posix::Stat(pathname_.c_str(), &file_stat) == 0;
@@ -229,11 +233,10 @@ bool FilePath::DirectoryExists() const {
 
 #if GTEST_OS_WINDOWS_MOBILE
   LPCWSTR unicode = String::AnsiToUtf16(path.c_str());
-  WIN32_FILE_ATTRIBUTE_DATA attributes;
-  GetFileAttributesExW(unicode, GetFileExInfoStandard, &attributes);
+  const DWORD attributes = GetFileAttributes(unicode);
   delete [] unicode;
-  if ((attributes.dwFileAttributes != kInvalidFileAttributes) &&
-	  (attributes.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+  if ((attributes != kInvalidFileAttributes) &&
+      (attributes & FILE_ATTRIBUTE_DIRECTORY)) {
     result = true;
   }
 #else
@@ -323,7 +326,7 @@ bool FilePath::CreateFolder() const {
 #if GTEST_OS_WINDOWS_MOBILE
   FilePath removed_sep(this->RemoveTrailingPathSeparator());
   LPCWSTR unicode = String::AnsiToUtf16(removed_sep.c_str());
-  int result = CreateDirectoryW(unicode, NULL) ? 0 : -1;
+  int result = CreateDirectory(unicode, NULL) ? 0 : -1;
   delete [] unicode;
 #elif GTEST_OS_WINDOWS
   int result = _mkdir(pathname_.c_str());
