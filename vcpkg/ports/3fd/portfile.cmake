@@ -26,31 +26,34 @@ set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/3fd-2.5.4)
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO faburaya/3FD
-    HEAD_REF work
-    REF work
+    HEAD_REF master
+    REF v2.5.4
     SHA512 1
 )
 
 # Build:
 message(STATUS "Building...")
-if (MSVC) # Microsoft Visual C++:
-    if (VCPKG_CMAKE_SYSTEM_NAME MATCHES "WindowsStore")
-        vcpkg_build_msbuild(
-            USE_VCPKG_INTEGRATION
-            PROJECT_PATH ${SOURCE_PATH}/3FD/3FD.WinRT.UWP.vcxproj
-            PLATFORM ${BUILD_ARCH}
-        )
-    else()
-        vcpkg_build_msbuild(
-            USE_VCPKG_INTEGRATION
-            PROJECT_PATH ${SOURCE_PATH}/3FD/3FD.vcxproj
-            PLATFORM ${BUILD_ARCH}
-            TARGET Build
-        )
-    endif()
-else() # POSIX:
-    message(FATAL_ERROR "Unsupported system: 3FD does not currently support VCPKG in Linux!")
-endif (MSVC)
+if (VCPKG_CMAKE_SYSTEM_NAME MATCHES "Linux") # UWP:
+	message(FATAL_ERROR "Unsupported system: 3FD is not currently ported to VCPKG in Linux!")
+
+elseif (VCPKG_CMAKE_SYSTEM_NAME MATCHES "Darwin") # OSX:
+	message(FATAL_ERROR "Unsupported system: 3FD is not currently ported to VCPKG in Mac OS!")
+
+elseif (VCPKG_CMAKE_SYSTEM_NAME MATCHES "WindowsStore") # UWP:
+    vcpkg_build_msbuild(
+        USE_VCPKG_INTEGRATION
+        PROJECT_PATH ${SOURCE_PATH}/3FD/3FD.WinRT.UWP.vcxproj
+        PLATFORM ${BUILD_ARCH}
+    )
+
+else() # Win32:
+    vcpkg_build_msbuild(
+        USE_VCPKG_INTEGRATION
+        PROJECT_PATH ${SOURCE_PATH}/3FD/3FD.vcxproj
+        PLATFORM ${BUILD_ARCH}
+        TARGET Build
+    )
+endif()
 
 # Install:
 message(STATUS "Installing...")
@@ -58,12 +61,15 @@ message(STATUS "Installing...")
 file(GLOB HEADER_FILES LIST_DIRECTORIES false "${SOURCE_PATH}/3FD/*.h")
 file(INSTALL
     ${HEADER_FILES}
-    DESTINATION ${CURRENT_PACKAGES_DIR}/include/3FD/3FD
+    DESTINATION ${CURRENT_PACKAGES_DIR}/include/3FD
     PATTERN "*_impl*.h" EXCLUDE
+	PATTERN "*example*.h" EXCLUDE
+	PATTERN "stdafx.h" EXCLUDE
+	PATTERN "targetver.h" EXCLUDE
 )
 
 file(INSTALL ${SOURCE_PATH}/btree  DESTINATION ${CURRENT_PACKAGES_DIR}/include/3FD)
-file(INSTALL ${SOURCE_PATH}/OpenCL DESTINATION ${CURRENT_PACKAGES_DIR}/include/3FD)
+file(INSTALL ${SOURCE_PATH}/OpenCL/CL DESTINATION ${CURRENT_PACKAGES_DIR}/include/3FD)
 
 file(MAKE_DIRECTORY ${CURRENT_PACKAGES_DIR}/share/3FD)
 file(INSTALL

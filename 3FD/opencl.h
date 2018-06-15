@@ -4,6 +4,7 @@
 #include "base.h"
 #include "configuration.h"
 #include "logger.h"
+#include "CL/cl.h"
 #include <set>
 #include <map>
 #include <deque>
@@ -13,7 +14,6 @@
 #include <memory>
 #include <cstdint>
 #include <mutex>
-#include <CL/cl.h>
 
 namespace _3fd
 {
