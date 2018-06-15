@@ -1,7 +1,6 @@
 #ifndef GC_H
 #define GC_H
 
-#include "base.h"
 #include "utils.h"
 #include "gc_memorydigraph.h"
 #include "utils_lockfreequeue.h"
@@ -35,7 +34,7 @@ namespace memory
     /// <summary>
     /// Implements the garbage collector engine.
     /// </summary>
-    class GarbageCollector : notcopiable 
+    class GarbageCollector 
     {
     private:
 
@@ -60,6 +59,8 @@ namespace memory
         static GarbageCollector &GetInstance();
 
         static void Shutdown();
+
+		GarbageCollector(const GarbageCollector &) = delete;
 
         ~GarbageCollector();
 

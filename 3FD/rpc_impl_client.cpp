@@ -487,8 +487,8 @@ namespace rpc
 
 
     // Wraps RPC to isolate SEH code
-    static RPC_STATUS CallbackWrapSEH(const std::function<void(rpc_binding_handle_t) NOEXCEPT> &rpc,
-                                 rpc_binding_handle_t bindingHandle)
+    static RPC_STATUS CallbackWrapSEH(const std::function<void(rpc_binding_handle_t)> &rpc,
+                                      rpc_binding_handle_t bindingHandle)
     {
         RPC_STATUS exCode;
 
@@ -513,7 +513,7 @@ namespace rpc
     /// <param name="bindingHandle">The RPC binding handle.</param>
     /// <returns>The status of the RPC.</returns>
     static RPC_STATUS WrapRpc(const char *tag,
-                              const std::function<void(rpc_binding_handle_t) NOEXCEPT> &rpc,
+                              const std::function<void(rpc_binding_handle_t)> &rpc,
                               rpc_binding_handle_t bindingHandle)
     {
         int retryCount(0);
@@ -592,7 +592,7 @@ namespace rpc
     /// </summary>
     /// <param name="tag">A tag for the RPC.</param>
     /// <param name="rpc">The RPC to make.</param>
-    void RpcClient::Call(const char *tag, const std::function<void(rpc_binding_handle_t) NOEXCEPT> &rpc)
+    void RpcClient::Call(const char *tag, const std::function<void(rpc_binding_handle_t)> &rpc)
     {
         CALL_STACK_TRACE;
 
