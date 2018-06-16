@@ -28,93 +28,59 @@ namespace utils
     /////////////////////////////////
 
     /// <summary>
-    /// Instantiates for the whole process one STL memory pool for each given set of options.
+    /// Provides a unique STL memory pool (shared by all users) for each template instantiation.
+    /// This implementation is designed for failure unless a specialization is provided making use
+    /// of either <see cref="GetStlOptimizedSyncMemPool"/> or <see cref="GetStlOptimizedUnyncMemPool"/>.
     /// </summary>
-    template <size_t t_maxBlocksPerChunk, size_t t_blockSizeThresholdHint>
+    template <typename Type>
     class StlOptimizedMemoryPool
     {
-    private:
-
-        static constexpr std::pmr::synchronized_pool_resource synchronizedPool{
-            std::pmr::pool_options{ t_maxBlocksPerChunk, t_blockSizeThresholdHint }
-        };
-
-        static constexpr std::pmr::unsynchronized_pool_resource unsynchronizedPool{
-            std::pmr::pool_options{ t_maxBlocksPerChunk, t_blockSizeThresholdHint }
-        };
-
     public:
 
-        static constexpr std::pmr::memory_resource &GetPool(bool threadSafe) NOEXCEPT
+        static std::pmr::memory_resource &GetPool()
         {
-            return threadSafe ? synchronizedPool : unsynchronizedPool;
+            // NOT IMPLEMENTED:
+            _ASSERTE(false);
+            throw core::AppException<std::runtime_error>("StlOptimizedMemoryPool: specialization not implemented!");
         }
     };
 
+    /* t_maxBlocksPerChunk: The maximum number of blocks that will be allocated at once from the
+     * upstream std::pmr::memory_resource to replenish the pool. If the value is zero or is greater than
+     * an implementation-defined limit, that limit is used instead. The STL implementation may choose to
+     * use a smaller value than is specified in this field and may use different values for different pools.
+     *
+     * t_blockSizeThresholdHint: The largest allocation size that is required to be fulfilled using the
+     * pooling mechanism. Attempts to allocate a single block larger than this threshold will be allocated
+     * directly from the upstream std::pmr::memory_resource. If largest_required_pool_block is zero or is
+     * greater than an implementation-defined limit, that limit is used instead. The implementation may
+     * choose a pass-through threshold larger than specified in this field.
+     */
+    
     /// <summary>
-    /// Implements a minimal allocator (STL compatible) relying on C++17 STL pools.
-    ///
-    /// t_maxBlocksPerChunk: The maximum number of blocks that will be allocated at once from the
-    /// upstream std::pmr::memory_resource to replenish the pool. If the value is zero or is greater than
-    /// an implementation-defined limit, that limit is used instead. The STL implementation may choose to
-    /// use a smaller value than is specified in this field and may use different values for different pools.
-    ///
-    /// t_blockSizeThresholdHint: The largest allocation size that is required to be fulfilled using the
-    /// pooling mechanism. Attempts to allocate a single block larger than this threshold will be allocated
-    /// directly from the upstream std::pmr::memory_resource. If largest_required_pool_block is zero or is
-    /// greater than an implementation-defined limit, that limit is used instead. The implementation may
-    /// choose a pass-through threshold larger than specified in this field.
+    /// Creates a unique STL memory pool (thread-safe) for each template instantiation.
     /// </summary>
-    template <typename Type, size_t t_maxBlocksPerChunk, size_t t_blockSizeThresholdHint, bool t_threadSafe = true>
-    class StlOptimizedAllocator
+    template <typename Type, size_t t_maxBlocksPerChunk, size_t t_blockSizeThresholdHint>
+    std::pmr::memory_resource &GetStlOptimizedSyncMemPool() NOEXCEPT
     {
-    private:
+        static std::pmr::synchronized_pool_resource memoryPool{
+            std::pmr::pool_options{ t_maxBlocksPerChunk, t_blockSizeThresholdHint }
+        };
 
-        static constexpr std::pmr::memory_resource &GetPool() NOEXCEPT
-        {
-            return StlOptimizedMemoryPool<t_maxBlocksPerChunk, t_blockSizeThresholdHint>::GetPool(t_threadSafe);
-        }
+        return memoryPool;
+    };
 
-    public:
+    /// <summary>
+    /// Creates a unique STL memory pool (NOT thread-safe, faster) for each template instantiation.
+    /// </summary>
+    template <typename Type, size_t t_maxBlocksPerChunk, size_t t_blockSizeThresholdHint>
+    std::pmr::memory_resource &GetStlOptimizedUnsyncMemPool() NOEXCEPT
+    {
+        static std::pmr::unsynchronized_pool_resource memoryPool{
+            std::pmr::pool_options{ t_maxBlocksPerChunk, t_blockSizeThresholdHint }
+        };
 
-        typedef Type value_type;
-
-        // ctor not required by STL
-        StlOptimizedAllocator() NOEXCEPT {}
-
-        // converting copy constructor (no-op because nothing is copied)
-        template<typename OtherType>
-        StlOptimizedAllocator(const StlOptimizedAllocator<OtherType,
-            t_maxBlocksPerChunk, t_blockSizeThresholdHint, t_threadSafe> &) NOEXCEPT {}
-
-        // instances are always equivalent (fine, because there is no copy ction)
-        template<typename OtherType>
-        bool operator==(const StlOptimizedAllocator<OtherType,
-            t_maxBlocksPerChunk, t_blockSizeThresholdHint, t_threadSafe> &) const NOEXCEPT { return true; }
-
-        // instances are always equivalent (fine, because there is no copy ction)
-        template<typename OtherType>
-        bool operator!=(const StlOptimizedAllocator<OtherType,
-            t_maxBlocksPerChunk, t_blockSizeThresholdHint, t_threadSafe> &) const NOEXCEPT { return false; }
-
-        // allocates blocks of memory
-        Type *allocate(const size_t numBlocks) const
-        {
-            if (numBlocks != 0)
-            {
-                return static_cast<Type *> (
-                    GetPool().allocate(numBlocks * sizeof(Type))
-                );
-            }
-
-            return nullptr;
-        }
-
-        // deallocates blocks of memory
-        void deallocate(Type * const ptr, size_t numBlocks) const NOEXCEPT
-        {
-            GetPool().deallocate(ptr, numBlocks * sizeof(Type));
-        }
+        return memoryPool;
     };
 
     /// <summary>
@@ -144,7 +110,7 @@ namespace utils
 
         MemoryPool(uint16_t numBlocks, uint16_t blockSize);
 
-		MemoryPool(const MemoryPool &) = delete;
+        MemoryPool(const MemoryPool &) = delete;
 
         MemoryPool(MemoryPool &&ob);
 
@@ -166,6 +132,66 @@ namespace utils
     };
 
     /// <summary>
+    /// Provides a memory pool for <see cref="std::map{void *, MemoryPool}::value_type"/>
+    /// in <see cref="DynamicMemPool"/>.
+    /// </summary>
+    template <> class StlOptimizedMemoryPool<std::map<void *, MemoryPool>::value_type>
+    {
+    public:
+
+        static std::pmr::memory_resource &GetPool()
+        {
+            return GetStlOptimizedUnsyncMemPool<std::map<void *, MemoryPool>::value_type,
+                64, sizeof(std::map<void *, MemoryPool>::value_type)>();
+        }
+    };
+
+    /// <summary>
+    /// Implements a minimal allocator (STL compatible) relying on C++17 STL pools.
+    /// </summary>
+    template <typename Type>
+    class StlOptimizedAllocator
+    {
+    public:
+
+        typedef Type value_type;
+
+        // ctor not required by STL
+        StlOptimizedAllocator() NOEXCEPT {}
+
+        // converting copy constructor (no-op because nothing is copied)
+        template<typename OtherType>
+        StlOptimizedAllocator(const StlOptimizedAllocator<OtherType> &) NOEXCEPT {}
+
+        // instances are always equivalent (fine, because there is no copy ction)
+        template<typename OtherType>
+        bool operator==(const StlOptimizedAllocator<OtherType> &) const NOEXCEPT { return true; }
+
+        // instances are always equivalent (fine, because there is no copy ction)
+        template<typename OtherType>
+        bool operator!=(const StlOptimizedAllocator<OtherType> &) const NOEXCEPT { return false; }
+
+        // allocates blocks of memory
+        Type *allocate(const size_t numBlocks) const
+        {
+            if (numBlocks != 0)
+            {
+                return static_cast<Type *> (
+                    StlOptimizedMemoryPool<Type>::GetPool().allocate(numBlocks * sizeof(Type))
+                );
+            }
+
+            return nullptr;
+        }
+
+        // deallocates blocks of memory
+        void deallocate(Type * const ptr, size_t numBlocks) const NOEXCEPT
+        {
+            StlOptimizedMemoryPool<Type>::GetPool().deallocate(ptr, numBlocks * sizeof(Type));
+        }
+    };
+
+    /// <summary>
     /// A template class for a memory pool that expands dynamically.
     /// The pool was designed for single-thread access.
     /// </summary>
@@ -177,13 +203,9 @@ namespace utils
         const uint16_t m_initialSize,
                        m_blockSize;
 
-#if defined(_M_X64) || defined(__amd64__)
         typedef std::map<void *, MemoryPool, std::less<void *>,
-            StlOptimizedAllocator<std::map<void *, MemoryPool>::value_type, 64, 128, false>> MapOfMemoryPools;
-#else
-        typedef std::map<void *, MemoryPool, std::less<void *>,
-            StlOptimizedAllocator<std::pair<void *, MemoryPool>::value_type, 64, 64, false>> MapOfMemoryPools;
-#endif
+            StlOptimizedAllocator<std::map<void *, MemoryPool>::value_type>> MapOfMemoryPools;
+
         MapOfMemoryPools m_memPools;
         std::queue<MemoryPool *> m_availableMemPools;
 
