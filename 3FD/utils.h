@@ -27,44 +27,26 @@ namespace utils
     // Memory Allocation Utilities
     /////////////////////////////////
 
-    /// <summary>
-    /// Provides a unique STL memory pool (shared by all users) for each template instantiation.
-    /// This implementation is designed for failure unless a specialization is provided making use
-    /// of either <see cref="GetStlOptimizedSyncMemPool"/> or <see cref="GetStlOptimizedUnyncMemPool"/>.
-    /// </summary>
-    template <typename Type>
-    class StlOptimizedMemoryPool
-    {
-    public:
-
-        static std::pmr::memory_resource &GetPool()
-        {
-            // NOT IMPLEMENTED:
-            _ASSERTE(false);
-            throw core::AppException<std::runtime_error>("StlOptimizedMemoryPool: specialization not implemented!");
-        }
-    };
-
     /* t_maxBlocksPerChunk: The maximum number of blocks that will be allocated at once from the
      * upstream std::pmr::memory_resource to replenish the pool. If the value is zero or is greater than
      * an implementation-defined limit, that limit is used instead. The STL implementation may choose to
      * use a smaller value than is specified in this field and may use different values for different pools.
      *
-     * t_blockSizeThresholdHint: The largest allocation size that is required to be fulfilled using the
-     * pooling mechanism. Attempts to allocate a single block larger than this threshold will be allocated
-     * directly from the upstream std::pmr::memory_resource. If largest_required_pool_block is zero or is
-     * greater than an implementation-defined limit, that limit is used instead. The implementation may
+     * t_bkSizeBytesThresholdHint: The largest allocation size (in bytes) that is required to be fulfilled
+     * using the pooling mechanism. Attempts to allocate a single block larger than this threshold will be
+     * allocated directly from the upstream std::pmr::memory_resource. If largest_required_pool_block is zero
+     * or isgreater than an implementation-defined limit, that limit is used instead. The implementation may
      * choose a pass-through threshold larger than specified in this field.
      */
     
     /// <summary>
     /// Creates a unique STL memory pool (thread-safe) for each template instantiation.
     /// </summary>
-    template <typename Type, size_t t_maxBlocksPerChunk, size_t t_blockSizeThresholdHint>
+    template <typename Type, size_t t_maxBlocksPerChunk, size_t t_bkSizeBytesThresholdHint>
     std::pmr::memory_resource &GetStlOptimizedSyncMemPool() NOEXCEPT
     {
         static std::pmr::synchronized_pool_resource memoryPool{
-            std::pmr::pool_options{ t_maxBlocksPerChunk, t_blockSizeThresholdHint }
+            std::pmr::pool_options{ t_maxBlocksPerChunk, t_bkSizeBytesThresholdHint }
         };
 
         return memoryPool;
@@ -73,14 +55,137 @@ namespace utils
     /// <summary>
     /// Creates a unique STL memory pool (NOT thread-safe, faster) for each template instantiation.
     /// </summary>
-    template <typename Type, size_t t_maxBlocksPerChunk, size_t t_blockSizeThresholdHint>
+    template <typename Type, size_t t_maxBlocksPerChunk, size_t t_bkSizeBytesThresholdHint>
     std::pmr::memory_resource &GetStlOptimizedUnsyncMemPool() NOEXCEPT
     {
         static std::pmr::unsynchronized_pool_resource memoryPool{
-            std::pmr::pool_options{ t_maxBlocksPerChunk, t_blockSizeThresholdHint }
+            std::pmr::pool_options{ t_maxBlocksPerChunk, t_bkSizeBytesThresholdHint }
         };
 
         return memoryPool;
+    };
+
+    /// <summary>
+    /// Base for minimal STL allocator relying on C++17 STL memory pools.
+    /// </summary>
+    template <typename Type, bool t_threadSafe>
+    class StlOptimizedAllocatorBase
+    {
+    private:
+
+        // Guess a good size for pool memory chunk in number of blocks
+        static constexpr size_t GuessNumMemBlocksPerChunk(size_t blockSizeBytes)
+        {
+            /* Use a chunk of 16 KB, which is 4x the amount of memory in a memory page
+            fetched from physical memory. That should render 87.5% probability of getting
+            a page entirely inside the chunk when fetching one of its objects, which is
+            what I am looking for here: cache efficiency. */
+            return 16424 / blockSizeBytes;
+        }
+
+        // Gets the memory pools that serves this allocator
+        std::pmr::memory_resource &GetMemoryPool() const NOEXCEPT
+        {
+            constexpr auto numBlocksPerChunk = GuessNumMemBlocksPerChunk(sizeof(Type));
+            constexpr auto blockSizeThresholdHint = sizeof(Type);
+
+            if (!t_threadSafe)
+            {
+                return GetStlOptimizedUnsyncMemPool<Type, numBlocksPerChunk, blockSizeThresholdHint>();
+            }
+            else
+            {
+                return GetStlOptimizedSyncMemPool<Type, numBlocksPerChunk, blockSizeThresholdHint>();
+            }
+        }
+
+    public:
+
+        template<typename OtherType>
+        bool IsEqualTo(const StlOptimizedAllocatorBase<OtherType, t_threadSafe> &ob) const NOEXCEPT
+        {
+            // instances might not be equivalent!
+            return &(this->GetMemoryPool()) == &(ob.GetMemoryPool());
+        }
+
+        // allocates blocks of memory
+        Type *allocate(const size_t numBlocks) const
+        {
+            if (numBlocks != 0)
+            {
+                return static_cast<Type *> (
+                    GetMemoryPool().allocate(numBlocks * sizeof(Type))
+                );
+            }
+
+            return nullptr;
+        }
+
+        // deallocates blocks of memory
+        void deallocate(Type * const ptr, size_t numBlocks) const NOEXCEPT
+        {
+            GetMemoryPool().deallocate(ptr, numBlocks * sizeof(Type));
+        }
+    };
+
+    /// <summary>
+    /// Implements a minimal STL allocator (NOT thread-safe) relying on C++17 STL memory pools.
+    /// </summary>
+    template <typename Type>
+    class StlOptimizedUnsafeAllocator : public StlOptimizedAllocatorBase<Type, false>
+    {
+    public:
+
+        typedef Type value_type;
+
+        // ctor not required by STL
+        StlOptimizedUnsafeAllocator() NOEXCEPT {}
+
+        // converting copy constructor (no-op because nothing is copied)
+        template<typename OtherType>
+        StlOptimizedUnsafeAllocator(const StlOptimizedUnsafeAllocator<OtherType> &) NOEXCEPT {}
+
+        template<typename OtherType>
+        bool operator==(const StlOptimizedUnsafeAllocator<OtherType> &that) const NOEXCEPT
+        {
+            return this->IsEqualTo(that);
+        }
+
+        template<typename OtherType>
+        bool operator!=(const StlOptimizedUnsafeAllocator<OtherType> &that) const NOEXCEPT
+        {
+            return !(*this == that);
+        }
+    };
+
+    /// <summary>
+    /// Implements a minimal STL allocator (thread-safe) relying on C++17 STL memory pools.
+    /// </summary>
+    template <typename Type>
+    class StlOptimizedAllocator : public StlOptimizedAllocatorBase<Type, true>
+    {
+    public:
+
+        typedef Type value_type;
+
+        // ctor not required by STL
+        StlOptimizedAllocator() NOEXCEPT {}
+
+        // converting copy constructor (no-op because nothing is copied)
+        template<typename OtherType>
+        StlOptimizedAllocator(const StlOptimizedAllocator<OtherType> &) NOEXCEPT {}
+
+        template<typename OtherType>
+        bool operator==(const StlOptimizedAllocator<OtherType> &that) const NOEXCEPT
+        {
+            return this->IsEqualTo(that);
+        }
+
+        template<typename OtherType>
+        bool operator!=(const StlOptimizedAllocator<OtherType> &that) const NOEXCEPT
+        {
+            return !(*this == that);
+        }
     };
 
     /// <summary>
@@ -100,11 +205,11 @@ namespace utils
         const uint16_t m_blockSize;
 
         /// <summary>
-        /// Keeps available memory blocks as offset integers to the base address.
-        /// Because the offset is a 16 bit unsigned integer, this imposes a practical
-        /// limit of aproximatelt [block size] x 128 KB to the pool.
+        /// Keeps available memory addresses stored as distance in number of blocks
+        /// from the base address. Because the offset is a 16 bit unsigned integer,
+        /// this imposes a practical limit of aproximately 64k blocks to the pool.
         /// </summary>
-        std::stack<uint16_t> m_availableAddrsAsOffset;
+        std::stack<uint16_t> m_availAddrsAsBlockIndex;
 
     public:
 
@@ -132,79 +237,19 @@ namespace utils
     };
 
     /// <summary>
-    /// Provides a memory pool for <see cref="std::map{void *, MemoryPool}::value_type"/>
-    /// in <see cref="DynamicMemPool"/>.
-    /// </summary>
-    template <> class StlOptimizedMemoryPool<std::map<void *, MemoryPool>::value_type>
-    {
-    public:
-
-        static std::pmr::memory_resource &GetPool()
-        {
-            return GetStlOptimizedUnsyncMemPool<std::map<void *, MemoryPool>::value_type,
-                64, sizeof(std::map<void *, MemoryPool>::value_type)>();
-        }
-    };
-
-    /// <summary>
-    /// Implements a minimal allocator (STL compatible) relying on C++17 STL pools.
-    /// </summary>
-    template <typename Type>
-    class StlOptimizedAllocator
-    {
-    public:
-
-        typedef Type value_type;
-
-        // ctor not required by STL
-        StlOptimizedAllocator() NOEXCEPT {}
-
-        // converting copy constructor (no-op because nothing is copied)
-        template<typename OtherType>
-        StlOptimizedAllocator(const StlOptimizedAllocator<OtherType> &) NOEXCEPT {}
-
-        // instances are always equivalent (fine, because there is no copy ction)
-        template<typename OtherType>
-        bool operator==(const StlOptimizedAllocator<OtherType> &) const NOEXCEPT { return true; }
-
-        // instances are always equivalent (fine, because there is no copy ction)
-        template<typename OtherType>
-        bool operator!=(const StlOptimizedAllocator<OtherType> &) const NOEXCEPT { return false; }
-
-        // allocates blocks of memory
-        Type *allocate(const size_t numBlocks) const
-        {
-            if (numBlocks != 0)
-            {
-                return static_cast<Type *> (
-                    StlOptimizedMemoryPool<Type>::GetPool().allocate(numBlocks * sizeof(Type))
-                );
-            }
-
-            return nullptr;
-        }
-
-        // deallocates blocks of memory
-        void deallocate(Type * const ptr, size_t numBlocks) const NOEXCEPT
-        {
-            StlOptimizedMemoryPool<Type>::GetPool().deallocate(ptr, numBlocks * sizeof(Type));
-        }
-    };
-
-    /// <summary>
     /// A template class for a memory pool that expands dynamically.
-    /// The pool was designed for single-thread access.
+    /// The pool was designed for SINGLE-THREAD access.
     /// </summary>
     class DynamicMemPool
     {
     private:
 
-        const float    m_increasingFactor;
-        const uint16_t m_initialSize,
-                       m_blockSize;
+        const float m_growingFactor;
+        const uint16_t m_blockSize;
+        const uint16_t m_initialSize;
 
         typedef std::map<void *, MemoryPool, std::less<void *>,
-            StlOptimizedAllocator<std::map<void *, MemoryPool>::value_type>> MapOfMemoryPools;
+            StlOptimizedUnsafeAllocator<std::map<void *, MemoryPool>::value_type>> MapOfMemoryPools;
 
         MapOfMemoryPools m_memPools;
         std::queue<MemoryPool *> m_availableMemPools;
@@ -213,7 +258,7 @@ namespace utils
 
         DynamicMemPool(uint16_t initialSize,
                        uint16_t blockSize,
-                       float increasingFactor);
+                       float growingFactor);
 
 		DynamicMemPool(const DynamicMemPool &) = delete;
 

@@ -2,9 +2,9 @@
 #include "utils.h"
 #include "exceptions.h"
 
-#include <sstream>
-#include <cstring>
 #include <cassert>
+#include <cstring>
+#include <sstream>
 
 namespace _3fd
 {
@@ -54,7 +54,7 @@ namespace utils
         m_nextAddr(nullptr),
         m_end(nullptr),
         m_blockSize(blockSize),
-        m_availableAddrsAsOffset()
+        m_availAddrsAsBlockIndex()
     {
         _ASSERTE(numBlocks * blockSize > 0); // Cannot handle a null value as the amount of memory
 
@@ -84,7 +84,7 @@ namespace utils
         m_nextAddr(ob.m_nextAddr),
         m_end(ob.m_end),
         m_blockSize(ob.m_blockSize),
-        m_availableAddrsAsOffset(std::move(ob.m_availableAddrsAsOffset))
+        m_availAddrsAsBlockIndex(std::move(ob.m_availAddrsAsBlockIndex))
     {
         ob.m_baseAddr = ob.m_nextAddr = ob.m_end = nullptr;
     }
@@ -95,7 +95,7 @@ namespace utils
     MemoryPool::~MemoryPool()
     {
         // Memory pool destruction was reached not having all its memory returned
-        _ASSERTE(m_availableAddrsAsOffset.size() ==
+        _ASSERTE(m_availAddrsAsBlockIndex.size() ==
             (reinterpret_cast<uintptr_t> (m_nextAddr) - reinterpret_cast<uintptr_t> (m_baseAddr)) / m_blockSize
         );
 
@@ -143,7 +143,7 @@ namespace utils
     /// <returns><c>true</c> if all the memory is available, otherwise, <c>false</c>.</returns>
     bool MemoryPool::IsFull() const NOEXCEPT
     {
-        return m_availableAddrsAsOffset.size() == GetNumBlocks() || m_nextAddr == m_baseAddr;
+        return m_availAddrsAsBlockIndex.size() == GetNumBlocks() || m_nextAddr == m_baseAddr;
     }
 
     /// <summary>
@@ -152,7 +152,7 @@ namespace utils
     /// <returns><c>true</c> if the pool has no memory available, otherwise, <c>false</c>.</returns>
     bool MemoryPool::IsEmpty() const NOEXCEPT
     {
-        return m_nextAddr == m_end && m_availableAddrsAsOffset.empty();
+        return m_nextAddr == m_end && m_availAddrsAsBlockIndex.empty();
     }
 
     /// <summary>
@@ -161,12 +161,12 @@ namespace utils
     /// <returns></returns>
     void * MemoryPool::GetFreeBlock() NOEXCEPT
     {
-        if (!m_availableAddrsAsOffset.empty())
+        if (!m_availAddrsAsBlockIndex.empty())
         {
             auto addr = reinterpret_cast<void *> (
-                reinterpret_cast<uintptr_t> (m_baseAddr) + m_availableAddrsAsOffset.top()
+                reinterpret_cast<uintptr_t> (m_baseAddr) + m_availAddrsAsBlockIndex.top() * m_blockSize
             );
-            m_availableAddrsAsOffset.pop();
+            m_availAddrsAsBlockIndex.pop();
             return addr;
         }
         else if (m_nextAddr < m_end)
@@ -185,9 +185,9 @@ namespace utils
     /// <param name="addr">The address of the block to return.</param>
     void MemoryPool::ReturnBlock(void *addr)
     {
-        _ASSERTE(Contains(addr)); // Cannot return a memory block which does not belongs to the memory pool
-        m_availableAddrsAsOffset.push(static_cast<uint16_t> (
-                reinterpret_cast<uintptr_t> (addr) - reinterpret_cast<uintptr_t> (m_baseAddr)
+        _ASSERTE(Contains(addr)); // Cannot return a memory block which does not belong to the memory pool
+        m_availAddrsAsBlockIndex.push(static_cast<uint16_t> (
+            (reinterpret_cast<uintptr_t> (addr) - reinterpret_cast<uintptr_t> (m_baseAddr)) / m_blockSize
         ));
     }
 

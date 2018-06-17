@@ -1,8 +1,13 @@
 #include "stdafx.h"
 #include "utils.h"
 
+#include <algorithm>
 #include <cassert>
+#include <limits>
 #include <sstream>
+
+#undef min
+#undef max
 
 namespace _3fd
 {
@@ -13,18 +18,19 @@ namespace utils
     ////////////////////////////////////
 
     /// <summary>
+    /// <summary>
     /// Initializes a new instance of the <see cref="DynamicMemPool"/> class.
     /// </summary>
     /// <param name="initialSize">The initial size.</param>
     /// <param name="blockSize">Size of the block.</param>
-    /// <param name="increasingFactor">The factor for increasing size of the pool.</param>
-    DynamicMemPool::DynamicMemPool(uint16_t initialSize, uint16_t blockSize, float increasingFactor) :
+    /// <param name="growingFactor">The factor for growing size of the pool.</param>
+    DynamicMemPool::DynamicMemPool(uint16_t initialSize, uint16_t blockSize, float growingFactor) :
         m_initialSize(initialSize),
         m_blockSize(blockSize),
-        m_increasingFactor(increasingFactor)
+        m_growingFactor(growingFactor)
     {
         _ASSERTE(initialSize * blockSize > 0); // The object pool cannot start zero-sized
-        _ASSERTE(increasingFactor > 0); // The increasing factor must be a positive number
+        _ASSERTE(growingFactor > 0); // The increasing factor must be a positive number
     }
 
     /// <summary>
@@ -33,7 +39,8 @@ namespace utils
     /// <returns></returns>
     void * DynamicMemPool::GetFreeBlock()
     {
-        if (m_availableMemPools.empty() == false) // there are memory pools with available memory:
+        // are there memory pools with available memory?
+        if (!m_availableMemPools.empty())
         {
             auto memPool = m_availableMemPools.front();
             auto addr = memPool->GetFreeBlock();
@@ -46,23 +53,32 @@ namespace utils
                 return GetFreeBlock(); // tail recursion
             }
         }
-        else // there are no memory available in the existent pools, so create a new one:
+
+        // there is no memory available in the existent pools, so create a new one:
+
+        uint16_t initNumBlocks;
+        
+        if (!m_memPools.empty())
         {
-            MemoryPool memPool(
-                m_memPools.empty() ? m_initialSize : static_cast<uint16_t> (m_initialSize * m_increasingFactor),
-                m_blockSize
+            initNumBlocks = static_cast<uint16_t> (
+                std::min(static_cast<size_t> (m_initialSize * m_growingFactor),
+                         static_cast<size_t> (std::numeric_limits<uint16_t>::max()))
             );
-
-            auto addr = memPool.GetFreeBlock();
-
-            auto &movedMemPool = m_memPools.insert(
-                std::make_pair(addr, std::move(memPool))
-            ).first->second;
-
-            m_availableMemPools.push(&movedMemPool); // make the new memory pool available
-
-            return addr;
         }
+        else
+            initNumBlocks = m_initialSize;
+
+        MemoryPool memPool(initNumBlocks, m_blockSize);
+
+        auto addr = memPool.GetFreeBlock();
+
+        auto &movedMemPool = m_memPools.insert(
+            std::make_pair(addr, std::move(memPool))
+        ).first->second;
+
+        m_availableMemPools.push(&movedMemPool); // make the new memory pool available
+
+        return addr;
     }
 
     /// <summary>
