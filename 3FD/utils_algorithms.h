@@ -1,8 +1,11 @@
 #ifndef UTILS_ALGORITHMS_H // header guard
 #define UTILS_ALGORITHMS_H
 
-#include <iterator>
+#include <chrono>
+#include <cmath>
+#include <cstdlib>
 #include <functional>
+#include <iterator>
 
 namespace _3fd
 {
@@ -125,6 +128,31 @@ namespace utils
         } while (match != end);
 
         return true;
+    }
+
+    /// <summary>
+    /// Calculates the exponential back off given the attempt and time slot.
+    /// </summary>
+    /// <param name="attempt">The attempt (base 0).</param>
+    /// <param name="timeSlot">The time slot.</param>
+    /// <returns>A timespan of how long to wait before the next retry.</returns>
+    template <typename RepType, typename PeriodType>
+    std::chrono::duration<RepType, PeriodType> CalcExponentialBackOff(unsigned int attempt,
+                                                                      std::chrono::duration<RepType, PeriodType> timeSlot)
+    {
+        static bool first(true);
+
+        if (first)
+        {
+            srand(time(nullptr));
+            first = false;
+        }
+
+        auto k = static_cast<unsigned int> (
+            abs(1.0F * rand() / RAND_MAX) * ((1 << attempt) - 1)
+        );
+
+        return timeSlot * k;
     }
 
 }// end of namespace utils

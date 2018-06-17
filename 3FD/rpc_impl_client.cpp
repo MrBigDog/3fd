@@ -1,10 +1,11 @@
 #include "stdafx.h"
 #include "rpc_helpers.h"
 #include "rpc_impl_util.h"
-#include "configuration.h"
 #include "callstacktracer.h"
-#include "utils_io.h"
+#include "configuration.h"
 #include "logger.h"
+#include "utils_algorithms.h"
+#include "utils_io.h"
 
 #include <memory>
 #include <codecvt>
@@ -244,7 +245,7 @@ namespace rpc
             else if (authnSecurity == AuthenticationSecurity::RequireMutualAuthn)
             {
                 oss << "Could not fulfill mutual authentication requirement of "
-                    "RPC client for object " << objUUID << " in " << destination
+                       "RPC client for object " << objUUID << " in " << destination
                     << " because Microsoft Active Directory services are not available";
 
                 throw core::AppException<std::runtime_error>(oss.str());
@@ -550,26 +551,24 @@ namespace rpc
 
             // Wait before retry:
 
-            uint64_t intervalMs;
+            std::chrono::milliseconds interval;
 
             if (recomAction == RpcErrRecommendedAction::SimpleRetry)
             {
                 static const auto callRetrySleepMs =
                     core::AppConfig::GetSettings().framework.rpc.cliCallRetrySleepMs;
 
-                intervalMs = callRetrySleepMs;
+                interval = std::chrono::milliseconds(callRetrySleepMs);
             }
             else // with exponential back-off:
             {
                 static const auto callRetryTimeSlotMs =
                     core::AppConfig::GetSettings().framework.rpc.cliCallRetryTimeSlotMs;
 
-                intervalMs = static_cast<uint64_t> (
-                    callRetryTimeSlotMs * (pow(2, retryCount) - 1) * rand() / RAND_MAX
-                );
+                interval = utils::CalcExponentialBackOff(retryCount, std::chrono::milliseconds(callRetryTimeSlotMs));
             }
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(intervalMs));
+            std::this_thread::sleep_for(interval);
 
             ++retryCount;
 
