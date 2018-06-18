@@ -36,8 +36,8 @@ namespace _3fd
         void Event::Signalize()
         {
             std::unique_lock<std::mutex> lock(m_mutex);
-            m_condition.notify_all();
             m_flag = true;
+            m_condition.notify_all();
         }
 
         /// <summary>

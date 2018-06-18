@@ -100,13 +100,13 @@ namespace integration_tests
                              [=, &result](WS_SERVICE_PROXY *wsProxyHandle, WS_HEAP *wsHeapHandle, WS_ERROR *wsErrorHandle)
                              {
                                  return CalcBindingUnsecure_Multiply(wsProxyHandle,
-                                     first,
-                                     second,
-                                     &result,
-                                     wsHeapHandle,
-                                     nullptr, 0,
-                                     nullptr,
-                                     wsErrorHandle);
+                                                                     first,
+                                                                     second,
+                                                                     &result,
+                                                                     wsHeapHandle,
+                                                                     nullptr, 0,
+                                                                     nullptr,
+                                                                     wsErrorHandle);
                              });
         }
 
@@ -118,16 +118,16 @@ namespace integration_tests
             BOOL result;
 
             Call("Calculator web service operation 'CloseService'",
-                proxyOperHeapSize,
-                [&result](WS_SERVICE_PROXY *wsProxyHandle, WS_HEAP *wsHeapHandle, WS_ERROR *wsErrorHandle)
-                {
-                    return CalcBindingUnsecure_CloseService(wsProxyHandle,
-                                                            &result,
-                                                            wsHeapHandle,
-                                                            nullptr, 0,
-                                                            nullptr,
-                                                            wsErrorHandle);
-                });
+                 proxyOperHeapSize,
+                 [&result](WS_SERVICE_PROXY *wsProxyHandle, WS_HEAP *wsHeapHandle, WS_ERROR *wsErrorHandle)
+                 {
+                     return CalcBindingUnsecure_CloseService(wsProxyHandle,
+                                                             &result,
+                                                             wsHeapHandle,
+                                                             nullptr, 0,
+                                                             nullptr,
+                                                             wsErrorHandle);
+                 });
 
             return (result == TRUE);
         }
