@@ -38,7 +38,7 @@ namespace utils
             while (begin != end)
             {
                 auto middle = begin + std::distance(begin, end) / 2;
-                
+
                 if (lessThan(middle->GetKey(), searchKey))
                     begin = middle + 1;
                 else if (lessThan(searchKey, middle->GetKey()))
@@ -149,7 +149,7 @@ namespace utils
         }
 
         auto k = static_cast<unsigned int> (
-            abs(1.0F * rand() / RAND_MAX) * ((1 << attempt) - 1)
+            std::abs(1.0F * rand() / RAND_MAX) * ((1 << attempt) - 1)
         );
 
         return timeSlot * k;

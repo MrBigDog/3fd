@@ -3,17 +3,20 @@
 
 #include "exceptions.h"
 
-#include <map>
-#include <stack>
-#include <queue>
-#include <vector>
-#include <memory>
-#include <memory_resource>
-#include <mutex>
-#include <future>
+#include <cinttypes>
 #include <condition_variable>
 #include <functional>
-#include <cinttypes>
+#include <future>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <stack>
+#include <vector>
+
+#ifdef _3FD_HAS_STLOPTIMALLOC
+#   include <memory_resource>
+#endif
 
 #ifdef _3FD_PLATFORM_WINRT
 #   include "utils_lockfreequeue.h"
@@ -27,6 +30,8 @@ namespace utils
     // Memory Allocation Utilities
     /////////////////////////////////
 
+#ifdef _3FD_HAS_STLOPTIMALLOC
+
     /* t_maxBlocksPerChunk: The maximum number of blocks that will be allocated at once from the
      * upstream std::pmr::memory_resource to replenish the pool. If the value is zero or is greater than
      * an implementation-defined limit, that limit is used instead. The STL implementation may choose to
@@ -38,7 +43,7 @@ namespace utils
      * or isgreater than an implementation-defined limit, that limit is used instead. The implementation may
      * choose a pass-through threshold larger than specified in this field.
      */
-    
+
     /// <summary>
     /// Creates a unique STL memory pool (thread-safe) for each template instantiation.
     /// </summary>
@@ -187,6 +192,7 @@ namespace utils
             return !(*this == that);
         }
     };
+#endif // _3FD_HAS_STLOPTIMALLOC
 
     /// <summary>
     /// Provides uninitialized and contiguous memory.
@@ -248,9 +254,12 @@ namespace utils
         const uint16_t m_blockSize;
         const uint16_t m_initialSize;
 
+#ifdef _3FD_HAS_STL_OPTIMALLOC
         typedef std::map<void *, MemoryPool, std::less<void *>,
             StlOptimizedUnsafeAllocator<std::map<void *, MemoryPool>::value_type>> MapOfMemoryPools;
-
+#else
+        typedef std::map<void *, MemoryPool> MapOfMemoryPools;
+#endif
         MapOfMemoryPools m_memPools;
         std::queue<MemoryPool *> m_availableMemPools;
 
