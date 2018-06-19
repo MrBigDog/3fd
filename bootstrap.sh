@@ -143,7 +143,7 @@ function buildRapidxml()
 function buildSqlite3()
 {
     find . | grep 'sqlite' | xargs rm -rf
-    SQLITE='sqlite-autoconf-3230100'
+    SQLITE='sqlite-autoconf-3240000'
     download "http://sqlite.org/2018/${SQLITE}.tar.gz"
     tar -xf "${SQLITE}.tar.gz"
     INSTALLDIR=$(pwd)
