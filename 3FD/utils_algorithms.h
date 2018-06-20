@@ -14,34 +14,34 @@ namespace utils
     /// <summary>
     /// Binary search in sub-range of vector containing map cases entries.
     /// </summary>
-    /// <param name="searchKey">The key to search for.</param>
     /// <param name="begin">An iterator to the first position of the sub-range.
     /// In the end, this parameter keeps the beginning of the last sub-range this
     /// iterative algorithm has delved into.</param>
     /// <param name="begin">An iterator to one past the last position of the sub-range.
     /// In the end, this parameter keeps the end of the last sub-range this
     /// iterative algorithm has delved into.</param>
+    /// <param name="searchKey">The key to search for.</param>
     /// <returns>An iterator to the found entry. Naturally, it cannot refer to
     /// the same position in the parameter 'end', unless there was no match.</returns>
-    template <typename KeyType, typename IterType>
-    IterType BinarySearch(KeyType searchKey,
-                          IterType &begin,
-                          IterType &end)
+    template <typename IterType, typename SearchKeyType>
+    IterType BinarySearch(IterType &begin,
+                          IterType &end,
+                          SearchKeyType searchKey,
+                          const std::function<SearchKeyType (typename std::iterator_traits<IterType>::reference)> &getKey,
+                          const std::function<bool (SearchKeyType, SearchKeyType)> &lessThan = std::less<SearchKeyType>())
     {
-        std::less<KeyType> lessThan;
-
         auto endOfRange = end;
         auto length = std::distance(begin, end);
 
-        if (length > 32)
+        if (length > 7)
         {
             while (begin != end)
             {
                 auto middle = begin + std::distance(begin, end) / 2;
 
-                if (lessThan(middle->GetKey(), searchKey))
+                if (lessThan(getKey(*middle), searchKey))
                     begin = middle + 1;
-                else if (lessThan(searchKey, middle->GetKey()))
+                else if (lessThan(searchKey, getKey(*middle)))
                     end = middle;
                 else
                     return middle;
@@ -54,38 +54,42 @@ namespace utils
 
         while (begin != end)
         {
-            if (lessThan(begin->GetKey(), searchKey))
+            if (lessThan(getKey(*begin), searchKey))
                 ++begin;
-            else if (!lessThan(searchKey, begin->GetKey()))
-                return begin;
-            else
+            else if (lessThan(searchKey, getKey(*begin)))
                 break;
+            else
+                return begin;
         }
 
         return begin = end = endOfRange;
     }
 
-    template <typename KeyType, typename IterType>
-    IterType BinarySearch(KeyType searchKey,
-                          IterType &&begin,
-                          IterType &&end)
+    template <typename IterType, typename SearchKeyType>
+    IterType BinarySearch(IterType &&begin,
+                          IterType &&end,
+                          SearchKeyType searchKey,
+                          const std::function<SearchKeyType (typename std::iterator_traits<IterType>::reference)> &getKey,
+                          const std::function<bool (SearchKeyType, SearchKeyType)> &lessThan = std::less<SearchKeyType>())
     {
-        return BinarySearch(searchKey, begin, end);
+        return BinarySearch(begin, end, searchKey, getKey, lessThan);
     }
 
     /// <summary>
     /// Gets the sub range of entries that match the given key (using binary search).
     /// </summary>
-    /// <param name="searchKey">The key to search.</param>
     /// <param name="subRangeBegin">An iterator to the first position of
     /// the range to search, and receives the same for the found sub-range.</param>
     /// <param name="subRangeEnd">An iterator to one past the last position of
     /// the range to search, and receives the same for the found sub-range.</param>
+    /// <param name="searchKey">The key to search.</param>
     /// <returns>When a sub-range has been found, <c>true</c>, otherwise, <c>false</c>.</returns>
-    template <typename KeyType, typename IterType>
-    bool BinSearchSubRange(KeyType searchKey,
-                           IterType &subRangeBegin,
-                           IterType &subRangeEnd)
+    template <typename IterType, typename SearchKeyType>
+    bool BinSearchSubRange(IterType &subRangeBegin,
+                           IterType &subRangeEnd,
+                           SearchKeyType searchKey,
+                           const std::function<SearchKeyType (typename std::iterator_traits<IterType>::reference)> &getKey,
+                           const std::function<bool (SearchKeyType, SearchKeyType)> &lessThan = std::less<SearchKeyType>())
     {
         struct {
             IterType begin;
@@ -95,7 +99,7 @@ namespace utils
         auto endOfRange = subRangeEnd;
         auto end = subRangeEnd;
         auto begin = subRangeBegin;
-        auto match = BinarySearch(searchKey, begin, end);
+        auto match = BinarySearch(begin, end, searchKey, getKey, lessThan);
 
         // match? this is the first, so keep the partition at the right:
         if (match != end)
@@ -112,7 +116,7 @@ namespace utils
         do
         {
             subRangeBegin = end = match; // last match is the smallest entry found!
-            match = BinarySearch(searchKey, begin, end); // continue to search in the left partition
+            match = BinarySearch(begin, end, searchKey, getKey, lessThan); // continue to search in the left partition
         } while (match != end);
 
         /* Now go back to the partition at the right of the first
@@ -124,7 +128,7 @@ namespace utils
         do
         {
             subRangeEnd = begin = match + 1; // last match is the greatest entry found!
-            match = BinarySearch(searchKey, begin, end); // continue to search in the right partition
+            match = BinarySearch(begin, end, searchKey, getKey, lessThan); // continue to search in the right partition
         } while (match != end);
 
         return true;

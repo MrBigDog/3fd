@@ -16,8 +16,6 @@ namespace unit_tests
     {
         int key;
         int val;
-
-        uint64_t GetKey() { return key; }
     };
 
     /// <summary>
@@ -41,7 +39,8 @@ namespace unit_tests
         {
             int key = abs(rand()) % numEntries;
 
-            auto iter = utils::BinarySearch(key, list.begin(), list.end());
+            auto iter = utils::BinarySearch(list.cbegin(), list.cend(),
+                key, [](const Object &x){ return x.key; });
 
             EXPECT_NE(list.end(), iter);
             EXPECT_EQ(key, iter->key);
@@ -52,7 +51,8 @@ namespace unit_tests
         {
             int key = (abs(rand()) % 69) + numEntries;
 
-            auto iter = utils::BinarySearch(key, list.begin(), list.end());
+            auto iter = utils::BinarySearch(list.cbegin(), list.cend(),
+                key, [](const Object &x){ return x.key; });
 
             EXPECT_EQ(list.end(), iter);
         }
@@ -87,10 +87,14 @@ namespace unit_tests
         {
             int key = 1 + abs(rand()) % list.back().key;
 
-            auto subRangeBegin = list.begin();
-            auto subRangeEnd = list.end();
+            auto subRangeBegin = list.cbegin();
+            auto subRangeEnd = list.cend();
 
-            EXPECT_TRUE(utils::BinSearchSubRange(key, subRangeBegin, subRangeEnd));
+            EXPECT_TRUE(
+                utils::BinSearchSubRange(subRangeBegin, subRangeEnd,
+                    key, [](const Object &x){ return x.key; })
+            );
+
             EXPECT_NE(subRangeBegin, subRangeEnd) << "Could not find key " << key;
 
             std::for_each(subRangeBegin, subRangeEnd, [key](const Object &obj)
@@ -104,10 +108,14 @@ namespace unit_tests
         {
             int key = (abs(rand()) % 69) + list.back().key + 1;
 
-            auto subRangeBegin = list.begin();
-            auto subRangeEnd = list.end();
+            auto subRangeBegin = list.cbegin();
+            auto subRangeEnd = list.cend();
 
-            EXPECT_FALSE(utils::BinSearchSubRange(key, subRangeBegin, subRangeEnd));
+            EXPECT_FALSE(
+                utils::BinSearchSubRange(subRangeBegin, subRangeEnd,
+                    key, [](const Object &x){ return x.key; })
+            );
+
             EXPECT_EQ(subRangeBegin, subRangeEnd) << "Not supposed to find key " << key;
         }
     }
