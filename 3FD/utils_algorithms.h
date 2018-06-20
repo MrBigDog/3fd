@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <functional>
 #include <iterator>
+#include <algorithm>
 
 namespace _3fd
 {
@@ -18,17 +19,17 @@ namespace utils
     /// In the end, this parameter keeps the beginning of the last sub-range this
     /// iterative algorithm has delved into.</param>
     /// <param name="begin">An iterator to one past the last position of the sub-range.
-    /// In the end, this parameter keeps the end of the last sub-range this
-    /// iterative algorithm has delved into.</param>
+    /// In the end, this parameter keeps the end of the last sub-range this iterative
+    /// algorithm has delved into.</param>
     /// <param name="searchKey">The key to search for.</param>
     /// <returns>An iterator to the found entry. Naturally, it cannot refer to
     /// the same position in the parameter 'end', unless there was no match.</returns>
-    template <typename IterType, typename SearchKeyType>
+    template <typename IterType, typename SearchKeyType, typename GetKeyFnType, typename LessFnType>
     IterType BinarySearch(IterType &begin,
                           IterType &end,
                           SearchKeyType searchKey,
-                          const std::function<SearchKeyType (typename std::iterator_traits<IterType>::reference)> &getKey,
-                          const std::function<bool (SearchKeyType, SearchKeyType)> &lessThan = std::less<SearchKeyType>())
+                          GetKeyFnType getKey,
+                          LessFnType lessThan) NOEXCEPT
     {
         auto endOfRange = end;
         auto length = std::distance(begin, end);
@@ -65,14 +66,18 @@ namespace utils
         return begin = end = endOfRange;
     }
 
-    template <typename IterType, typename SearchKeyType>
+    template <typename IterType, typename SearchKeyType, typename GetKeyFnType, typename LessFnType>
     IterType BinarySearch(IterType &&begin,
                           IterType &&end,
                           SearchKeyType searchKey,
-                          const std::function<SearchKeyType (typename std::iterator_traits<IterType>::reference)> &getKey,
-                          const std::function<bool (SearchKeyType, SearchKeyType)> &lessThan = std::less<SearchKeyType>())
+                          GetKeyFnType getKeyFunction,
+                          LessFnType lessThanFunction) NOEXCEPT
     {
-        return BinarySearch(begin, end, searchKey, getKey, lessThan);
+        return BinarySearch(begin,
+                            end,
+                            searchKey,
+                            getKeyFunction,
+                            lessThanFunction);
     }
 
     /// <summary>
@@ -84,12 +89,12 @@ namespace utils
     /// the range to search, and receives the same for the found sub-range.</param>
     /// <param name="searchKey">The key to search.</param>
     /// <returns>When a sub-range has been found, <c>true</c>, otherwise, <c>false</c>.</returns>
-    template <typename IterType, typename SearchKeyType>
+    template <typename IterType, typename SearchKeyType, typename GetKeyFnType, typename LessFnType>
     bool BinSearchSubRange(IterType &subRangeBegin,
                            IterType &subRangeEnd,
                            SearchKeyType searchKey,
-                           const std::function<SearchKeyType (typename std::iterator_traits<IterType>::reference)> &getKey,
-                           const std::function<bool (SearchKeyType, SearchKeyType)> &lessThan = std::less<SearchKeyType>())
+                           GetKeyFnType getKeyFunction,
+                           LessFnType lessThanFunction) NOEXCEPT
     {
         struct {
             IterType begin;
@@ -99,7 +104,7 @@ namespace utils
         auto endOfRange = subRangeEnd;
         auto end = subRangeEnd;
         auto begin = subRangeBegin;
-        auto match = BinarySearch(begin, end, searchKey, getKey, lessThan);
+        auto match = BinarySearch(begin, end, searchKey, getKeyFunction, lessThanFunction);
 
         // match? this is the first, so keep the partition at the right:
         if (match != end)
@@ -116,7 +121,7 @@ namespace utils
         do
         {
             subRangeBegin = end = match; // last match is the smallest entry found!
-            match = BinarySearch(begin, end, searchKey, getKey, lessThan); // continue to search in the left partition
+            match = BinarySearch(begin, end, searchKey, getKeyFunction, lessThanFunction); // continue to search in the left partition
         } while (match != end);
 
         /* Now go back to the partition at the right of the first
@@ -128,7 +133,7 @@ namespace utils
         do
         {
             subRangeEnd = begin = match + 1; // last match is the greatest entry found!
-            match = BinarySearch(begin, end, searchKey, getKey, lessThan); // continue to search in the right partition
+            match = BinarySearch(begin, end, searchKey, getKeyFunction, lessThanFunction); // continue to search in the right partition
         } while (match != end);
 
         return true;
