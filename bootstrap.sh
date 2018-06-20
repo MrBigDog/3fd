@@ -244,7 +244,7 @@ function buildPoco()
         toolset='--config=Linux-clang'
     fi
 
-    ./configure --omit=Data/MySQL,Data/SQLite,Dynamic,JSON,MongoDB,PageCompiler,Redis $toolset --static --no-tests --no-samples --prefix=../
+    ./configure --omit=Data/MySQL,Data/SQLite,Dynamic,JSON,MongoDB,PageCompiler,Redis $toolset --static --no-tests --no-samples --prefix=$(cd ..; pwd)
     make -s -j $numCpuCores || exit
     make install
     cd ..

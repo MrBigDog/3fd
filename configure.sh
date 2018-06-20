@@ -1,14 +1,14 @@
 #!/bin/bash
 
-MODE=$1
+mode=$1
 
-if [ -n $MODE ] && [ -n "$(echo $MODE | grep -i '^debug$')" ];
+if [ -n $mode ] && [ -n "$(echo $mode | grep -i '^debug$')" ];
 then
-    CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=$MODE -DCMAKE_DEBUG_POSTFIX=d -DCMAKE_CXX_FLAGS='-std=c++11'"
+    CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=$mode -DCMAKE_DEBUG_POSTFIX=d"
 
-elif [ -n $MODE ] && [ -n "$(echo $MODE | grep -i '^release$')" ];
+elif [ -n $mode ] && [ -n "$(echo $mode | grep -i '^release$')" ];
 then
-    CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=$MODE -DCMAKE_CXX_FLAGS='-std=c++11'"
+    CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=$mode"
 else
     printf 'ERROR! Usage: ./configure.sh [debug|release]\n\n'
     exit
