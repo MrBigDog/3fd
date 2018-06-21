@@ -120,6 +120,7 @@
     <PlatformToolset>v141</PlatformToolset>
     <VcpkgTriplet>x86-uwp-static-md</VcpkgTriplet>
     <VcpkgEnabled>true</VcpkgEnabled>
+    <SpectreMitigation>Spectre</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -134,6 +135,7 @@
     <PlatformToolset>v141</PlatformToolset>
     <VcpkgTriplet>x64-uwp-static-md</VcpkgTriplet>
     <VcpkgEnabled>true</VcpkgEnabled>
+    <SpectreMitigation>Spectre</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -142,6 +144,7 @@
     <PlatformToolset>v141</PlatformToolset>
     <VcpkgTriplet>x86-uwp-static-md</VcpkgTriplet>
     <VcpkgEnabled>true</VcpkgEnabled>
+    <SpectreMitigation>Spectre</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
@@ -158,6 +161,7 @@
     <PlatformToolset>v141</PlatformToolset>
     <VcpkgTriplet>x64-uwp-static-md</VcpkgTriplet>
     <VcpkgEnabled>true</VcpkgEnabled>
+    <SpectreMitigation>Spectre</SpectreMitigation>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
