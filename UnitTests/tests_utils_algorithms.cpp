@@ -43,7 +43,11 @@ namespace unit_tests
                 key, [](const Object &x) NOEXCEPT { return x.key; }, std::less<int>());
 
             EXPECT_NE(list.end(), iter);
-            EXPECT_EQ(key, iter->key);
+
+            if (iter != list.end())
+            {
+                EXPECT_EQ(key, iter->key);
+            }
         }
 
         // Search it a few times (NO match):
@@ -96,6 +100,11 @@ namespace unit_tests
             );
 
             EXPECT_NE(subRangeBegin, subRangeEnd) << "Could not find key " << key;
+
+            if (subRangeEnd != list.end())
+            {
+                EXPECT_EQ(key, std::distance(subRangeBegin, subRangeEnd)) << "Incomplete range for key " << key;
+            }
 
             std::for_each(subRangeBegin, subRangeEnd, [key](const Object &obj)
             {
