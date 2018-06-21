@@ -4,7 +4,6 @@
 #include "utils.h"
 #include "gc_common.h"
 #include "gc_vertex.h"
-
 #include "stx/btree_set.h"
 
 namespace _3fd
