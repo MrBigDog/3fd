@@ -12,6 +12,50 @@ namespace _3fd
 {
 namespace utils
 {
+    template <typename IterType, typename KeyType, typename AnyCallableType>
+    class KeyGetter
+    {
+    private:
+
+        std::function<const KeyType &(typename std::iterator_traits<IterType>::reference) NOEXCEPT> m_wrappedCallable;
+
+    public:
+
+        KeyGetter(AnyCallableType callable)
+            : m_wrappedCallable(std::forward<AnyCallableType>(callable)) {}
+
+        KeyGetter(const KeyGetter &ob)
+            : m_wrappedCallable(ob.m_wrappedCallable) {}
+
+        constexpr KeyType &operator()(typename std::iterator_traits<IterType>::reference object) const NOEXCEPT
+        {
+            return m_wrappedCallable(object);
+        }
+    };
+
+    template <typename IterType, typename AnyCallableType>
+    class LessThanComparator
+    {
+    private:
+
+        std::function<bool (typename std::iterator_traits<IterType>::reference,
+            typename std::iterator_traits<IterType>::reference) NOEXCEPT> m_wrappedCallable;
+
+    public:
+
+        LessThanComparator(AnyCallableType callable)
+            : m_wrappedCallable(std::forward<AnyCallableType>(callable)) {}
+
+        LessThanComparator(const LessThanComparator &ob)
+            : m_wrappedCallable(ob.m_wrappedCallable) {}
+
+        constexpr bool operator()(typename std::iterator_traits<IterType>::reference left,
+                                  typename std::iterator_traits<IterType>::reference right) const NOEXCEPT
+        {
+            return m_wrappedCallable(left, right);
+        }
+    };
+
     /// <summary>
     /// Binary search in sub-range of vector containing map cases entries.
     /// </summary>
@@ -28,8 +72,8 @@ namespace utils
     IterType BinarySearch(IterType &begin,
                           IterType &end,
                           SearchKeyType searchKey,
-                          GetKeyFnType getKey,
-                          LessFnType lessThan) NOEXCEPT
+                          KeyGetter<IterType, SearchKeyType, GetKeyFnType> getKey,
+                          LessThanComparator<IterType, LessFnType> lessThan) NOEXCEPT
     {
         auto endOfRange = end;
         auto length = std::distance(begin, end);
@@ -70,8 +114,8 @@ namespace utils
     IterType BinarySearch(IterType &&begin,
                           IterType &&end,
                           SearchKeyType searchKey,
-                          GetKeyFnType getKeyFunction,
-                          LessFnType lessThanFunction) NOEXCEPT
+                          KeyGetter<IterType, SearchKeyType, GetKeyFnType> getKey,
+                          LessThanComparator<IterType, LessFnType> lessThan) NOEXCEPT
     {
         return BinarySearch(begin,
                             end,
@@ -93,8 +137,8 @@ namespace utils
     bool BinSearchSubRange(IterType &subRangeBegin,
                            IterType &subRangeEnd,
                            SearchKeyType searchKey,
-                           GetKeyFnType getKeyFunction,
-                           LessFnType lessThanFunction) NOEXCEPT
+                           KeyGetter<IterType, SearchKeyType, GetKeyFnType> getKey,
+                           LessThanComparator<IterType, LessFnType> lessThan) NOEXCEPT
     {
         struct {
             IterType begin;
@@ -104,7 +148,7 @@ namespace utils
         auto endOfRange = subRangeEnd;
         auto end = subRangeEnd;
         auto begin = subRangeBegin;
-        auto match = BinarySearch(begin, end, searchKey, getKeyFunction, lessThanFunction);
+        auto match = BinarySearch(begin, end, searchKey, getKey, lessThan);
 
         // match? this is the first, so keep the partition at the right:
         if (match != end)
@@ -121,7 +165,7 @@ namespace utils
         do
         {
             subRangeBegin = end = match; // last match is the smallest entry found!
-            match = BinarySearch(begin, end, searchKey, getKeyFunction, lessThanFunction); // continue to search in the left partition
+            match = BinarySearch(begin, end, searchKey, getKey, lessThan); // continue to search in the left partition
         } while (match != end);
 
         /* Now go back to the partition at the right of the first
@@ -133,7 +177,7 @@ namespace utils
         do
         {
             subRangeEnd = begin = match + 1; // last match is the greatest entry found!
-            match = BinarySearch(begin, end, searchKey, getKeyFunction, lessThanFunction); // continue to search in the right partition
+            match = BinarySearch(begin, end, searchKey, getKey, lessThan); // continue to search in the right partition
         } while (match != end);
 
         return true;
