@@ -5,7 +5,7 @@
 #include <string>
 #include <atomic>
 #include <map>
-#include "sqlite3.h"
+#include <sqlite3.h>
 #include "utils_lockfreequeue.h"
 
 namespace _3fd

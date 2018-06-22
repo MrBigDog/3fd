@@ -26,7 +26,6 @@ add_definitions(
 
 include_directories(
     "${PROJECT_SOURCE_DIR}/../3FD"
-    "${PROJECT_SOURCE_DIR}/../gtest/include"
     "${PROJECT_SOURCE_DIR}/../OpenCL"
     "${PROJECT_SOURCE_DIR}/../btree"
     "${PROJECT_SOURCE_DIR}/../build/include"
@@ -52,7 +51,7 @@ string(TOLOWER ${CMAKE_BUILD_TYPE} buildType)
 if(buildType STREQUAL release)
     add_definitions(-DNDEBUG)
     set_target_properties(3FD            PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../3FD/lib3FD.a")
-    set_target_properties(gtest          PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../gtest/libgtest.a")
+    set_target_properties(gtest          PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libgtest.a")
     set_target_properties(sqlite3        PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libsqlite3.a")
     set_target_properties(boost_system   PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libboost_system-mt.a")
     set_target_properties(boost_thread   PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libboost_thread-mt.a")
@@ -63,7 +62,7 @@ if(buildType STREQUAL release)
     set_target_properties(PocoFoundation PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libPocoFoundation.a")
 elseif(buildType STREQUAL debug)
     set_target_properties(3FD            PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../3FD/lib3FDd.a")
-    set_target_properties(gtest          PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../gtest/libgtestd.a")
+    set_target_properties(gtest          PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libgtestd.a")
     set_target_properties(sqlite3        PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libsqlite3.a")
     set_target_properties(boost_system   PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libboost_system-mt-d.a")
     set_target_properties(boost_thread   PROPERTIES IMPORTED_LOCATION "${CMAKE_CURRENT_BINARY_DIR}/../build/lib/libboost_thread-mt-d.a")

@@ -143,14 +143,14 @@ function buildRapidxml()
 function buildSqlite3()
 {
     find . | grep 'sqlite' | xargs rm -rf
+    INSTALLDIR=$(pwd)
     SQLITE='sqlite-autoconf-3240000'
     download "http://sqlite.org/2018/${SQLITE}.tar.gz"
     tar -xf "${SQLITE}.tar.gz"
-    INSTALLDIR=$(pwd)
     cd $SQLITE
     printf "${SetColorToYELLOW}Building SQLite3 as static library (release)...${SetNoColor}\n"
     ./configure --enable-shared=no --prefix=$INSTALLDIR
-    make && make install
+    make -j $numCpuCores && make install
     cd ..
     rm -rf $SQLITE*
 }
@@ -265,4 +265,46 @@ if [ -d include/Poco ]; then
     done
 else
     buildPoco
+fi
+
+# # #
+# BUILD GTEST FRAMEWORK
+#
+function buildGTestFramework()
+{
+    find . | grep 'googletest' | xargs rm -rf
+    INSTALLDIR=$(pwd)
+    gtestVersion='release-1.8.0'
+    gtestPackage="${gtestVersion}.tar.gz"
+    download "https://github.com/google/googletest/archive/${gtestPackage}"
+    tar -xf $gtestPackage
+    gtestRootDir="googletest-${gtestVersion}"
+    cd "${gtestRootDir}/googletest"
+    printf "${SetColorToYELLOW}Building Google Test Framework as static library (debug)...${SetNoColor}\n"
+    cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_DEBUG_POSTFIX=d
+    make -j $numCpuCores && mv libgtest* $INSTALLDIR/lib/
+    make clean
+    printf "${SetColorToYELLOW}Building Google Test Framework as static library (release)...${SetNoColor}\n"
+    cmake -DCMAKE_BUILD_TYPE=Release
+    make -j $numCpuCores && mv libgtest* $INSTALLDIR/lib/
+    make clean
+    mv include/gtest $INSTALLDIR/include/
+    cd $INSTALLDIR
+    rm -rf $gtestRootDir
+    rm -rf $gtestPackage
+}
+
+if [ -d include ]; then
+    printf "${SetColorToYELLOW}Do you wish to download and (re)build Google Test Framework from source?${SetNoColor}"
+    while true; do
+        read -p " [yes/no] " yn
+        case $yn in
+            [Yy]* ) buildGTestFramework
+                    break;;
+            [Nn]* ) break;;
+            * ) printf "Please answer yes or no.";;
+        esac
+    done
+else
+    buildGTestFramework
 fi

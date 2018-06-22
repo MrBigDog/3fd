@@ -4,9 +4,7 @@ numCpuCores=$(grep -c ^processor /proc/cpuinfo)
 
 { ls build || printf 'Run configure.sh first!'; } &> /dev/null
 
-cd gtest
-make -j $numCpuCores
-cd ../3FD
+cd 3FD
 make -j $numCpuCores && make install
 cd ../UnitTests
 make -j $numCpuCores && make install
