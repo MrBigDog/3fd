@@ -121,8 +121,7 @@ namespace integration_tests
         /// Stop counting time for web service setup and open, then wait for
         /// signal to close the web service host.
         /// Once the signal is received, close it and measure how long that takes.
-        /// The maximum cycle time (setup, open & close) is kept to respond web clients that
-        /// need to know how long to wait before the web service host of the next test is available.
+        /// The maximum cycle time (setup, open & close) is kept.
         /// </summary>
         /// <param name="svc">The web service host object.</param>
         /// <returns>
