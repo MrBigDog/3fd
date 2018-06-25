@@ -32,6 +32,7 @@ namespace _3fd
 
         /// <summary>
         /// Sets the event.
+        /// This will wake only a single listener!
         /// </summary>
         void Event::Signalize()
         {
@@ -74,9 +75,19 @@ namespace _3fd
         {
             std::unique_lock<std::mutex> lock(m_mutex);
 
-            return m_flag || m_condition.wait_for(lock, 
-                                                  std::chrono::milliseconds(millisecs), 
-                                                  [this]() { return m_flag; });
+            return m_flag ||
+                m_condition.wait_for(lock, 
+                    std::chrono::milliseconds(millisecs), 
+                    [this]()
+                    {
+                        if (m_flag)
+                        {
+                            m_flag = false;
+                            return true;
+                        }
+
+                        return false;
+                    });
         }
 
     } // end of namespace utils
