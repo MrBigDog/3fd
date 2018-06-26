@@ -22,12 +22,12 @@ if (NOT VCPKG_CRT_LINKAGE MATCHES "dynamic")
 endif()
 
 # Get source code:
-set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/3fd-2.6.0)
+set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/3fd-2.6.2)
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO faburaya/3FD
     HEAD_REF master
-    REF v2.6.0
+    REF v2.6.2
     SHA512 1
 )
 
